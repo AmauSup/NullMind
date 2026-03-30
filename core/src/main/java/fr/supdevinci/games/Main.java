@@ -1,3 +1,10 @@
+/**
+ * @file main.java
+ * @brief Fichier prinipale du projet 
+ * @author Vianney
+ * @date 2026-03-30
+ */
+
 package fr.supdevinci.games;
 
 import com.badlogic.gdx.ApplicationAdapter;
