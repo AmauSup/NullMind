@@ -1,6 +1,6 @@
 /**
- * @file main.java
- * @brief Fichier prinipale du projet 
+ * @file Main.java
+ * @brief Fichier principal du projet
  * @author Vianney
  * @date 2026-03-30
  */
