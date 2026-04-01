@@ -14,14 +14,6 @@ public final class MovementIntent {
         this.vertical = vertical;
     }
 
-    public float getHorizontal() {
-        return horizontal;
-    }
-
-    public float getVertical() {
-        return vertical;
-    }
-
     /**
      * @return true when the player requested movement on at least one axis
      */

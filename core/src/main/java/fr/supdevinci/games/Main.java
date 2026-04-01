@@ -1,15 +1,10 @@
-/**
- * @file Main.java
- * @brief Fichier principal du projet
- * @author Vianney
- * @date 2026-03-30
- */
-
 package fr.supdevinci.games;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import fr.supdevinci.games.assets.GameAssets;
+import fr.supdevinci.games.logic.MovementService;
+import fr.supdevinci.games.logic.PlayerMovementService;
 import fr.supdevinci.games.screen.GameScreen;
 import fr.supdevinci.games.screen.TitleScreen;
 import fr.supdevinci.games.world.LevelCatalog;
@@ -27,7 +22,8 @@ public class Main extends Game {
     @Override
     public void create() {
         assets = new GameAssets();
-        context = new GameContext(this, assets, LevelCatalog.createDefault());
+        MovementService movementService = new PlayerMovementService();
+        context = new GameContext(this, assets, LevelCatalog.createDefault(), movementService);
         showTitleScreen();
     }
 

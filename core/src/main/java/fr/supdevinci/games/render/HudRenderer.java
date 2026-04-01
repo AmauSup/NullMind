@@ -5,12 +5,13 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import fr.supdevinci.games.assets.GameAssets;
-import fr.supdevinci.games.progress.KeyId;
+import fr.supdevinci.games.config.GameConstants;
+import fr.supdevinci.games.render.hud.BaseStatusMessageFormatter;
+import fr.supdevinci.games.render.hud.EmptyStatusFallbackDecorator;
+import fr.supdevinci.games.render.hud.LevelPrefixedStatusDecorator;
+import fr.supdevinci.games.render.hud.StatusMessageFormatter;
 import fr.supdevinci.games.world.GameWorld;
 import fr.supdevinci.games.world.TransitionZone;
-
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 /**
  * Renders the screen-space information of the prototype.
@@ -19,11 +20,15 @@ public final class HudRenderer {
     private final SpriteBatch spriteBatch;
     private final BitmapFont font;
     private final GlyphLayout glyphLayout;
+    private final StatusMessageFormatter statusMessageFormatter;
 
     public HudRenderer(GameAssets assets) {
         this.spriteBatch = assets.getSpriteBatch();
         this.font = assets.getFont();
         this.glyphLayout = new GlyphLayout();
+        this.statusMessageFormatter = new LevelPrefixedStatusDecorator(
+            new EmptyStatusFallbackDecorator(new BaseStatusMessageFormatter())
+        );
     }
 
     /**
@@ -38,21 +43,21 @@ public final class HudRenderer {
 
         // Draw level info
         String levelDisplay = gameWorld.getCurrentLevel().getDisplayName();
-        font.draw(spriteBatch, "Map : " + levelDisplay, 24f, viewport.getWorldHeight() - 20f);
+        font.draw(spriteBatch, GameConstants.HUD_LEVEL + levelDisplay, 24f, viewport.getWorldHeight() - 20f);
 
         // Draw controls and position info
-        font.draw(spriteBatch, "Déplacement : WASD / flèches | Interagir : E | Saut : Espace", 24f, viewport.getWorldHeight() - 48f);
-        font.draw(spriteBatch, "Pos : (" + (int)gameWorld.getPlayer().getX() + ", " + (int)gameWorld.getPlayer().getY() + ")", 24f, viewport.getWorldHeight() - 76f);
-        font.draw(spriteBatch, "Zones visitées : " + gameWorld.getVisitedLevelCount() + "/6", 24f, viewport.getWorldHeight() - 104f);
-        font.draw(spriteBatch, "Clés : " + formatKeys(gameWorld), 24f, viewport.getWorldHeight() - 132f);
-        font.draw(spriteBatch, "Info : " + gameWorld.getLastStatusMessage(), 24f, viewport.getWorldHeight() - 160f);
+        font.draw(spriteBatch, GameConstants.HUD_CONTROLS, 24f, viewport.getWorldHeight() - 48f);
+        font.draw(spriteBatch, GameConstants.HUD_POSITION + (int)gameWorld.getPlayer().getX() + ", " + (int)gameWorld.getPlayer().getY() + ")", 24f, viewport.getWorldHeight() - 76f);
+        font.draw(spriteBatch, GameConstants.HUD_VISITED_LEVELS + gameWorld.getVisitedLevelCount() + "/6", 24f, viewport.getWorldHeight() - 104f);
+        font.draw(spriteBatch, GameConstants.HUD_KEYS + formatKeys(gameWorld), 24f, viewport.getWorldHeight() - 132f);
+        font.draw(spriteBatch, GameConstants.HUD_STATUS + statusMessageFormatter.format(gameWorld), 24f, viewport.getWorldHeight() - 160f);
 
         float baseY = 110f;
-        font.draw(spriteBatch, "Sorties :", 24f, baseY + 56f);
+        font.draw(spriteBatch, GameConstants.HUD_TRANSITIONS, 24f, baseY + 56f);
         int index = 0;
         for (TransitionZone transitionZone : gameWorld.getCurrentLevel().getTransitionZones()) {
             String lockPart = transitionZone.getRequiredKeys().isEmpty() ? ""
-                : " [" + transitionZone.getRequiredKeys().size() + " pièce(s) requise(s)]";
+                : GameConstants.HUD_REQUIRED_KEYS_PREFIX + transitionZone.getRequiredKeys().size() + GameConstants.HUD_REQUIRED_KEYS_SUFFIX;
             font.draw(spriteBatch, "- " + transitionZone.getLabel() + lockPart, 24f, baseY + 32f - (index * 20f));
             index++;
         }
@@ -62,12 +67,9 @@ public final class HudRenderer {
 
     private String formatKeys(GameWorld gameWorld) {
         if (gameWorld.getInventory().getKeyCount() == 0) {
-            return "aucune";
+            return GameConstants.HUD_NO_KEYS;
         }
-        return gameWorld.getInventory().getKeys().stream()
-            .sorted(Comparator.comparing(KeyId::name))
-            .map(KeyId::getDisplayName)
-            .collect(Collectors.joining(", "));
+        return gameWorld.getInventory().getFormattedKeys();
     }
 
     /**

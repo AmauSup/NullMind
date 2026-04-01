@@ -2,23 +2,16 @@ package fr.supdevinci.games.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
-import fr.supdevinci.games.room.Room;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Immutable description of a playable level.
  *
- * <p>Supports two modes:
- * <ul>
- *   <li><strong>Flat levels</strong> (Hub, exterior zones): obstacles and transitions define level structure.</li>
- *   <li><strong>Interior levels</strong> (House): rooms and doors define multi-room exploration.</li>
- * </ul>
- * </p>
+ * This project currently uses flat levels only.
  */
 public final class LevelDefinition {
     public static final class Size {
@@ -87,24 +80,6 @@ public final class LevelDefinition {
                                      List<KeyPickup> keyPickups, List<InteractableObject> interactableObjects) {
             return new FlatContent(obstacles, transitionZones, keyPickups, interactableObjects);
         }
-
-        public static FlatContent empty() {
-            return new FlatContent(List.of(), List.of(), List.of(), List.of());
-        }
-    }
-
-    public static final class InteriorContent {
-        private final Map<String, Room> rooms;
-        private final String currentRoomId;
-
-        private InteriorContent(Map<String, Room> rooms, String currentRoomId) {
-            this.rooms = Map.copyOf(rooms);
-            this.currentRoomId = currentRoomId;
-        }
-
-        public static InteriorContent of(Map<String, Room> rooms, String currentRoomId) {
-            return new InteriorContent(rooms, currentRoomId);
-        }
     }
 
     private final LevelId id;
@@ -118,8 +93,6 @@ public final class LevelDefinition {
     private final List<InteractableObject> interactableObjects;
     private final Map<String, SpawnPoint> spawnPoints;
     private final String defaultSpawnId;
-    private final Optional<Map<String, Room>> rooms;
-    private final Optional<String> currentRoomId;
 
     public static LevelDefinition flat(
         LevelId id,
@@ -129,18 +102,7 @@ public final class LevelDefinition {
         Map<String, SpawnPoint> spawnPoints,
         String defaultSpawnId
     ) {
-        return new LevelDefinition(id, size, colors, spawnPoints, defaultSpawnId, flatContent, null);
-    }
-
-    public static LevelDefinition interior(
-        LevelId id,
-        Size size,
-        Colors colors,
-        InteriorContent interiorContent,
-        Map<String, SpawnPoint> spawnPoints,
-        String defaultSpawnId
-    ) {
-        return new LevelDefinition(id, size, colors, spawnPoints, defaultSpawnId, FlatContent.empty(), interiorContent);
+        return new LevelDefinition(id, size, colors, spawnPoints, defaultSpawnId, flatContent);
     }
 
     private LevelDefinition(
@@ -149,8 +111,7 @@ public final class LevelDefinition {
         Colors colors,
         Map<String, SpawnPoint> spawnPoints,
         String defaultSpawnId,
-        FlatContent flatContent,
-        InteriorContent interiorContent
+        FlatContent flatContent
     ) {
         this.id = id;
         this.width = size.width();
@@ -163,10 +124,6 @@ public final class LevelDefinition {
         this.interactableObjects = List.copyOf(flatContent.interactableObjects);
         this.spawnPoints = Collections.unmodifiableMap(new LinkedHashMap<>(spawnPoints));
         this.defaultSpawnId = defaultSpawnId;
-        this.rooms = interiorContent != null ? Optional.of(interiorContent.rooms) : Optional.empty();
-        this.currentRoomId = interiorContent != null && interiorContent.currentRoomId != null
-            ? Optional.of(interiorContent.currentRoomId)
-            : Optional.empty();
     }
 
     public LevelId getId() {
@@ -230,24 +187,4 @@ public final class LevelDefinition {
         return new Rectangle(0f, 0f, width, height);
     }
 
-    /**
-     * @return true if this level has multiple rooms (interior level)
-     */
-    public boolean isInteriorLevel() {
-        return rooms.isPresent();
-    }
-
-    /**
-     * @return optional map of rooms for interior levels
-     */
-    public Optional<Map<String, Room>> getRooms() {
-        return rooms;
-    }
-
-    /**
-     * @return optional current room id for interior levels
-     */
-    public Optional<String> getCurrentRoomId() {
-        return currentRoomId;
-    }
 }

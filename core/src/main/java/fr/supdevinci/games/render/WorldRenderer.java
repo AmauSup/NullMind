@@ -18,6 +18,13 @@ import fr.supdevinci.games.world.TransitionZone;
  * Renders the world using themed placeholders so the prototype stays readable without final textures.
  */
 public final class WorldRenderer {
+    private static final Color[] HUB_OBSTACLE_COLORS = {
+        ColorPalette.BUILDING_HOUSE,
+        ColorPalette.BUILDING_LIBRARY,
+        ColorPalette.BUILDING_CEMETERY,
+        ColorPalette.BUILDING_PORT
+    };
+
     private final ShapeRenderer shapeRenderer;
 
     public WorldRenderer(GameAssets assets) {
@@ -43,7 +50,7 @@ public final class WorldRenderer {
         drawKeyPickups(level, gameWorld);
 
         // Draw player
-        shapeRenderer.setColor(Color.valueOf("FFD166"));
+        shapeRenderer.setColor(ColorPalette.PLAYER);
         shapeRenderer.rect(
             gameWorld.getPlayer().getX(),
             gameWorld.getPlayer().getY(),
@@ -102,71 +109,82 @@ public final class WorldRenderer {
     }
 
     private void drawThemedBackground(LevelDefinition level) {
-        LevelId levelId = level.getId();
-
-        if (levelId == LevelId.HUB) {
-            // Route centrale + trottoirs
-            shapeRenderer.setColor(ColorPalette.HUB_SIDEWALK);
-            shapeRenderer.rect(0f, 200f, level.getWidth(), 140f);
-            shapeRenderer.rect(360f, 0f, 240f, level.getHeight());
-
-            shapeRenderer.setColor(ColorPalette.HUB_ROAD);
-            shapeRenderer.rect(0f, 230f, level.getWidth(), 80f);
-            shapeRenderer.rect(390f, 0f, 180f, level.getHeight());
-
-            // Bâtiments placeholder (non-collision visuelle)
-            shapeRenderer.setColor(ColorPalette.BUILDING_HOUSE);
-            shapeRenderer.rect(380f, 20f, 200f, 100f);
-            shapeRenderer.setColor(ColorPalette.BUILDING_LIBRARY);
-            shapeRenderer.rect(20f, 180f, 180f, 180f);
-            shapeRenderer.setColor(ColorPalette.BUILDING_CEMETERY);
-            shapeRenderer.rect(760f, 180f, 180f, 180f);
-            shapeRenderer.setColor(ColorPalette.BUILDING_PORT);
-            shapeRenderer.rect(350f, 390f, 260f, 130f);
-            return;
+        switch (level.getId()) {
+            case HUB:
+                drawHubBackground(level);
+                return;
+            case HOUSE:
+                drawHouseBackground(level);
+                return;
+            case LIBRARY:
+                drawLibraryBackground(level);
+                return;
+            case PORT:
+                drawPortBackground(level);
+                return;
+            case CEMETERY:
+                drawCemeteryBackground(level);
+                return;
+            default:
+                shapeRenderer.setColor(level.getBackgroundColor());
+                shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
         }
+    }
 
-        if (levelId == LevelId.HOUSE) {
-            shapeRenderer.setColor(Color.valueOf("6E4B37"));
-            shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
-            shapeRenderer.setColor(Color.valueOf("8A6248"));
-            shapeRenderer.rect(90f, 70f, 780f, 430f);
-            return;
-        }
+    private void drawHubBackground(LevelDefinition level) {
+        // Route centrale + trottoirs
+        shapeRenderer.setColor(ColorPalette.HUB_SIDEWALK);
+        shapeRenderer.rect(0f, 200f, level.getWidth(), 140f);
+        shapeRenderer.rect(360f, 0f, 240f, level.getHeight());
 
-        if (levelId == LevelId.LIBRARY) {
-            shapeRenderer.setColor(Color.valueOf("2E241C"));
-            shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
-            shapeRenderer.setColor(Color.valueOf("3C2F24"));
-            shapeRenderer.rect(120f, 80f, 760f, 360f);
-            return;
-        }
+        shapeRenderer.setColor(ColorPalette.HUB_ROAD);
+        shapeRenderer.rect(0f, 230f, level.getWidth(), 80f);
+        shapeRenderer.rect(390f, 0f, 180f, level.getHeight());
 
-        if (levelId == LevelId.PORT) {
-            shapeRenderer.setColor(Color.valueOf("5F4A3B"));
-            shapeRenderer.rect(0f, 0f, level.getWidth(), 360f);
-            shapeRenderer.setColor(Color.valueOf("233744"));
-            shapeRenderer.rect(0f, 360f, level.getWidth(), 180f);
-            shapeRenderer.setColor(Color.valueOf("8B6A45"));
-            shapeRenderer.rect(420f, 160f, 120f, 160f);
-            shapeRenderer.setColor(ColorPalette.BROKEN_BRIDGE_PART);
-            shapeRenderer.rect(430f, 378f, 80f, 22f);
-            shapeRenderer.rect(530f, 430f, 70f, 22f);
-            shapeRenderer.rect(390f, 480f, 70f, 22f);
-            return;
-        }
+        // Bâtiments placeholder (non-collision visuelle)
+        shapeRenderer.setColor(ColorPalette.BUILDING_HOUSE);
+        shapeRenderer.rect(380f, 20f, 200f, 100f);
+        shapeRenderer.setColor(ColorPalette.BUILDING_LIBRARY);
+        shapeRenderer.rect(20f, 180f, 180f, 180f);
+        shapeRenderer.setColor(ColorPalette.BUILDING_CEMETERY);
+        shapeRenderer.rect(760f, 180f, 180f, 180f);
+        shapeRenderer.setColor(ColorPalette.BUILDING_PORT);
+        shapeRenderer.rect(350f, 390f, 260f, 130f);
+    }
 
-        if (levelId == LevelId.CEMETERY) {
-            shapeRenderer.setColor(Color.valueOf("2D3430"));
-            shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
-            shapeRenderer.setColor(Color.valueOf("3A433E"));
-            shapeRenderer.rect(120f, 90f, 760f, 300f);
-            return;
-        }
-
-        // Cellar / default
-        shapeRenderer.setColor(level.getBackgroundColor());
+    private void drawHouseBackground(LevelDefinition level) {
+        shapeRenderer.setColor(ColorPalette.HOUSE_BACKGROUND);
         shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
+        shapeRenderer.setColor(ColorPalette.HOUSE_MAIN_AREA);
+        shapeRenderer.rect(90f, 70f, 780f, 430f);
+    }
+
+    private void drawLibraryBackground(LevelDefinition level) {
+        shapeRenderer.setColor(ColorPalette.LIBRARY_BACKGROUND);
+        shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
+        shapeRenderer.setColor(ColorPalette.LIBRARY_MAIN_AREA);
+        shapeRenderer.rect(120f, 80f, 760f, 360f);
+    }
+
+    private void drawPortBackground(LevelDefinition level) {
+        shapeRenderer.setColor(ColorPalette.PORT_DOCK);
+        shapeRenderer.rect(0f, 0f, level.getWidth(), 360f);
+        shapeRenderer.setColor(ColorPalette.PORT_WATER);
+        shapeRenderer.rect(0f, 360f, level.getWidth(), 180f);
+        shapeRenderer.setColor(ColorPalette.PORT_PIER);
+        shapeRenderer.rect(420f, 160f, 120f, 160f);
+
+        shapeRenderer.setColor(ColorPalette.BROKEN_BRIDGE_PART);
+        shapeRenderer.rect(430f, 378f, 80f, 22f);
+        shapeRenderer.rect(530f, 430f, 70f, 22f);
+        shapeRenderer.rect(390f, 480f, 70f, 22f);
+    }
+
+    private void drawCemeteryBackground(LevelDefinition level) {
+        shapeRenderer.setColor(ColorPalette.CEMETERY_BACKGROUND);
+        shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
+        shapeRenderer.setColor(ColorPalette.CEMETERY_MAIN_AREA);
+        shapeRenderer.rect(120f, 90f, 760f, 300f);
     }
 
     private void drawInteractables(LevelDefinition level, GameWorld gameWorld) {
@@ -220,18 +238,9 @@ public final class WorldRenderer {
     private void drawHubObstacles(LevelDefinition level) {
         int index = 0;
         for (Obstacle obstacle : level.getObstacles()) {
-            Color color;
-            if (index == 0) {
-                color = ColorPalette.BUILDING_HOUSE;
-            } else if (index == 1) {
-                color = ColorPalette.BUILDING_LIBRARY;
-            } else if (index == 2) {
-                color = ColorPalette.BUILDING_CEMETERY;
-            } else if (index == 3) {
-                color = ColorPalette.BUILDING_PORT;
-            } else {
-                color = getObstacleColor(LevelId.HUB);
-            }
+            Color color = index < HUB_OBSTACLE_COLORS.length
+                ? HUB_OBSTACLE_COLORS[index]
+                : ColorPalette.OBSTACLE_HUB;
 
             shapeRenderer.setColor(color);
             shapeRenderer.rect(
@@ -245,26 +254,24 @@ public final class WorldRenderer {
     }
 
     private Color getObstacleColor(LevelId levelId) {
-        if (levelId == LevelId.HUB) {
-            return new Color(0f, 0f, 0f, 0.55f);
+        switch (levelId) {
+            case HUB:
+                return ColorPalette.OBSTACLE_HUB;
+            case LIBRARY:
+                return ColorPalette.OBSTACLE_LIBRARY;
+            case PORT:
+                return ColorPalette.OBSTACLE_PORT;
+            case CEMETERY:
+                return ColorPalette.OBSTACLE_CEMETERY;
+            case HOUSE:
+                return ColorPalette.OBSTACLE_HOUSE;
+            default:
+                return ColorPalette.OBSTACLE_DEFAULT;
         }
-        if (levelId == LevelId.LIBRARY) {
-            return Color.valueOf("6A4A2A"); // rayons/comptoir
-        }
-        if (levelId == LevelId.PORT) {
-            return Color.valueOf("4D3A2D"); // bois et cabanes
-        }
-        if (levelId == LevelId.CEMETERY) {
-            return Color.valueOf("757575"); // pierre
-        }
-        if (levelId == LevelId.HOUSE) {
-            return Color.valueOf("2B1E17"); // murs intérieurs
-        }
-        return new Color(0f, 0f, 0f, 0.4f);
     }
 
     private void drawKeyPickups(LevelDefinition level, GameWorld gameWorld) {
-        shapeRenderer.setColor(Color.valueOf("F4D35E"));
+        shapeRenderer.setColor(ColorPalette.KEY_PICKUP);
         for (KeyPickup keyPickup : level.getKeyPickups()) {
             if (!gameWorld.isPickupCollected(keyPickup)) {
                 shapeRenderer.rect(

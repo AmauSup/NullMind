@@ -2,9 +2,10 @@ package fr.supdevinci.games.world;
 
 import com.badlogic.gdx.math.Rectangle;
 import fr.supdevinci.games.config.GameConfig;
+import fr.supdevinci.games.config.GameConstants;
 import fr.supdevinci.games.entity.Player;
+import fr.supdevinci.games.logic.MovementService;
 import fr.supdevinci.games.logic.MovementIntent;
-import fr.supdevinci.games.logic.PlayerMovementService;
 import fr.supdevinci.games.progress.Inventory;
 import fr.supdevinci.games.progress.KeyId;
 
@@ -19,8 +20,8 @@ import java.util.Set;
  * Holds the mutable state of a running game session.
  */
 public final class GameWorld {
-    private static final String FROM_HUB = "fromHub";
-    private static final float INTERACTION_RANGE = 26f;
+    private static final String FROM_HUB = GameConstants.SPAWN_FROM_HUB;
+    private static final float INTERACTION_RANGE = GameConstants.INTERACTION_RANGE;
     private static final Rectangle PORT_WATER_ZONE = new Rectangle(0f, 360f, GameConfig.WORLD_WIDTH, 180f);
     private static final Rectangle PORT_JUMP_START_ZONE = new Rectangle(430f, 330f, 140f, 40f);
     private static final List<Rectangle> PORT_FLOATING_PARTS = List.of(
@@ -30,14 +31,13 @@ public final class GameWorld {
     );
 
     private final LevelCatalog levelCatalog;
-    private final PlayerMovementService movementService;
+    private final MovementService movementService;
     private final Player player;
     private final Inventory inventory;
     private final Set<LevelId> visitedLevels;
     private final Set<String> collectedPickupIds;
     private final Set<String> exploredInteractableIds;
     private LevelDefinition currentLevel;
-    private Optional<String> currentRoomId;
     private String lastStatusMessage;
 
     /**
@@ -46,7 +46,7 @@ public final class GameWorld {
      * @param levelCatalog immutable level data
      * @param movementService movement rules for the player
      */
-    public GameWorld(LevelCatalog levelCatalog, PlayerMovementService movementService) {
+    public GameWorld(LevelCatalog levelCatalog, MovementService movementService) {
         this.levelCatalog = levelCatalog;
         this.movementService = movementService;
         this.player = new Player(0f, 0f, GameConfig.PLAYER_WIDTH, GameConfig.PLAYER_HEIGHT);
@@ -54,19 +54,8 @@ public final class GameWorld {
         this.visitedLevels = EnumSet.noneOf(LevelId.class);
         this.collectedPickupIds = new HashSet<>();
         this.exploredInteractableIds = new HashSet<>();
-        this.currentRoomId = Optional.empty(); // kept for compatibility with HUD/API
         this.lastStatusMessage = "";
-        loadLevel(LevelId.HOUSE, "start");
-    }
-
-    /**
-     * Advances the simulation by one frame.
-     *
-     * @param movementIntent movement requested by the input layer
-     * @param delta elapsed time in seconds
-     */
-    public void update(MovementIntent movementIntent, float delta) {
-        update(movementIntent, delta, false, false);
+        loadLevel(LevelId.HOUSE, GameConstants.SPAWN_START);
     }
 
     public void update(MovementIntent movementIntent, float delta, boolean interactPressed, boolean jumpPressed) {
@@ -105,31 +94,30 @@ public final class GameWorld {
 
             String token = toInteractableToken(currentLevel.getId(), interactableObject.getId());
             if (exploredInteractableIds.contains(token)) {
-                lastStatusMessage = "Déjà exploré.";
+                lastStatusMessage = GameConstants.MSG_ALREADY_EXPLORED;
                 return;
             }
 
             exploredInteractableIds.add(token);
             Optional<KeyId> hiddenKey = interactableObject.getHiddenKey();
             if (!hiddenKey.isPresent()) {
-                lastStatusMessage = "Rien d'utile ici.";
+                lastStatusMessage = GameConstants.MSG_NOTHING_USEFUL;
             }
             else if (inventory.addKey(hiddenKey.get())) {
-                lastStatusMessage = "Tu as trouvé : " + hiddenKey.get().getDisplayName();
+                lastStatusMessage = GameConstants.MSG_KEY_FOUND + hiddenKey.get().getDisplayName();
             }
             return;
         }
 
-        lastStatusMessage = "Rien à inspecter ici.";
+        lastStatusMessage = GameConstants.MSG_NOTHING_TO_INSPECT;
     }
 
     private boolean isInInteractionRange(Rectangle playerBounds, Rectangle targetArea) {
-        Rectangle interactionArea = new Rectangle(
-            targetArea.x - INTERACTION_RANGE,
-            targetArea.y - INTERACTION_RANGE,
-            targetArea.width + (INTERACTION_RANGE * 2f),
-            targetArea.height + (INTERACTION_RANGE * 2f)
-        );
+        Rectangle interactionArea = new Rectangle(targetArea);
+        interactionArea.x -= INTERACTION_RANGE;
+        interactionArea.y -= INTERACTION_RANGE;
+        interactionArea.width += INTERACTION_RANGE * 2f;
+        interactionArea.height += INTERACTION_RANGE * 2f;
         return interactionArea.overlaps(playerBounds);
     }
 
@@ -144,10 +132,8 @@ public final class GameWorld {
             target = PORT_FLOATING_PARTS.get(0);
         } else {
             for (int i = 0; i < PORT_FLOATING_PARTS.size(); i++) {
-                if (PORT_FLOATING_PARTS.get(i).overlaps(playerBounds)) {
-                    if (i + 1 < PORT_FLOATING_PARTS.size()) {
-                        target = PORT_FLOATING_PARTS.get(i + 1);
-                    }
+                if (PORT_FLOATING_PARTS.get(i).overlaps(playerBounds) && i + 1 < PORT_FLOATING_PARTS.size()) {
+                    target = PORT_FLOATING_PARTS.get(i + 1);
                     break;
                 }
             }
@@ -157,7 +143,7 @@ public final class GameWorld {
             float targetX = target.x + (target.width - player.getWidth()) / 2f;
             float targetY = target.y + (target.height - player.getHeight()) / 2f;
             player.setPosition(targetX, targetY);
-            lastStatusMessage = "Saut réussi.";
+            lastStatusMessage = GameConstants.MSG_JUMP_SUCCESS;
         }
     }
 
@@ -178,7 +164,7 @@ public final class GameWorld {
         }
 
         loadLevel(LevelId.PORT, FROM_HUB);
-        lastStatusMessage = "Tu es tombé à l'eau.";
+        lastStatusMessage = GameConstants.MSG_FELL_IN_WATER;
     }
 
     /**
@@ -207,8 +193,6 @@ public final class GameWorld {
         currentLevel = levelCatalog.get(levelId);
         visitedLevels.add(levelId);
 
-        currentRoomId = Optional.empty();
-
         SpawnPoint spawnPoint = currentLevel.resolveSpawn(spawnId);
         player.setPosition(spawnPoint.getX(), spawnPoint.getY());
     }
@@ -228,12 +212,16 @@ public final class GameWorld {
                 && !inventory.hasAllKeys(activeTransition.getRequiredKeys())) {
             long missing = activeTransition.getRequiredKeys().stream()
                 .filter(k -> !inventory.hasKey(k)).count();
-            lastStatusMessage = activeTransition.getLabel() + " verrouillée — " + missing + " clé(s) manquante(s) sur " + activeTransition.getRequiredKeys().size();
+            lastStatusMessage = activeTransition.getLabel()
+                + GameConstants.MSG_TRANSITION_LOCKED
+                + missing
+                + GameConstants.MSG_KEYS_MISSING_1
+                + activeTransition.getRequiredKeys().size();
             return;
         }
 
         loadLevel(activeTransition.getTargetLevelId(), activeTransition.getTargetSpawnId());
-        lastStatusMessage = "Transition vers : " + currentLevel.getDisplayName();
+        lastStatusMessage = GameConstants.MSG_TRANSITION_TO + currentLevel.getDisplayName();
     }
 
     private TransitionZone findOverlappingTransition(Rectangle playerBounds) {
@@ -257,23 +245,12 @@ public final class GameWorld {
         return visitedLevels.size();
     }
 
-    public Set<LevelId> getVisitedLevels() {
-        return EnumSet.copyOf(visitedLevels);
-    }
-
     public Inventory getInventory() {
         return inventory;
     }
 
     public String getLastStatusMessage() {
         return lastStatusMessage;
-    }
-
-    /**
-     * Returns the current room id for interior levels.
-     */
-    public Optional<String> getCurrentRoomId() {
-        return currentRoomId;
     }
 
     public boolean isPickupCollected(KeyPickup keyPickup) {
@@ -291,17 +268,17 @@ public final class GameWorld {
             if (!collectedPickupIds.contains(token) && keyPickup.getArea().overlaps(playerBounds)) {
                 collectedPickupIds.add(token);
                 if (inventory.addKey(keyPickup.getKeyId())) {
-                    lastStatusMessage = "Nouvelle clé : " + keyPickup.getKeyId().getDisplayName();
+                    lastStatusMessage = GameConstants.MSG_NEW_KEY + keyPickup.getKeyId().getDisplayName();
                 }
             }
         }
     }
 
     private String toPickupToken(LevelId levelId, String pickupId) {
-        return levelId.name() + ":" + pickupId;
+        return levelId.name() + GameConstants.TOKEN_SEPARATOR + pickupId;
     }
 
     private String toInteractableToken(LevelId levelId, String interactableId) {
-        return levelId.name() + ":" + interactableId;
+        return levelId.name() + GameConstants.TOKEN_SEPARATOR + interactableId;
     }
 }

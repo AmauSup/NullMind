@@ -2,15 +2,20 @@ package fr.supdevinci.games.progress;
 
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Holds the player's persistent collectibles for the current session.
  */
 public final class Inventory {
     private final EnumSet<KeyId> keys;
+    private String cachedFormattedKeys;
+    private boolean cacheDirty;
 
     public Inventory() {
         this.keys = EnumSet.noneOf(KeyId.class);
+        this.cachedFormattedKeys = "";
+        this.cacheDirty = true;
     }
 
     /**
@@ -20,7 +25,11 @@ public final class Inventory {
      * @return true when the key was newly added
      */
     public boolean addKey(KeyId keyId) {
-        return keys.add(keyId);
+        boolean added = keys.add(keyId);
+        if (added) {
+            cacheDirty = true;
+        }
+        return added;
     }
 
     /**
@@ -48,5 +57,20 @@ public final class Inventory {
 
     public int getKeyCount() {
         return keys.size();
+    }
+
+    public String getFormattedKeys() {
+        if (keys.isEmpty()) {
+            return "";
+        }
+
+        if (cacheDirty) {
+            cachedFormattedKeys = keys.stream()
+                .sorted()
+                .map(KeyId::getDisplayName)
+                .collect(Collectors.joining(", "));
+            cacheDirty = false;
+        }
+        return cachedFormattedKeys;
     }
 }

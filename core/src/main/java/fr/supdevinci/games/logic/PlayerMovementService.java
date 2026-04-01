@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Applies player movement while keeping the character inside the map and outside blocking obstacles.
  */
-public final class PlayerMovementService {
+public final class PlayerMovementService implements MovementService {
     /**
      * Computes the next collision box from the current state.
      *

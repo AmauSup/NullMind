@@ -10,14 +10,13 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import fr.supdevinci.games.GameContext;
 import fr.supdevinci.games.config.GameConfig;
+import fr.supdevinci.games.config.GameConstants;
 import fr.supdevinci.games.render.HudRenderer;
 
 /**
  * Minimal title screen used to demonstrate screen management before entering the playable prototype.
  */
 public final class TitleScreen extends ScreenAdapter {
-    private static final String TITLE_TEXT = "POC libGDX\n\nPeurs et traumatismes\n\nEntrée / Espace : démarrer\nÉchap : revenir ici pendant le jeu";
-
     private final GameContext context;
     private final Viewport viewport;
     private final OrthographicCamera camera;
@@ -40,7 +39,7 @@ public final class TitleScreen extends ScreenAdapter {
         ScreenUtils.clear(Color.valueOf("0B132B"));
         viewport.apply(true);
         camera.update();
-        hudRenderer.renderCenteredText(TITLE_TEXT, viewport);
+        hudRenderer.renderCenteredText(GameConstants.TITLE_SCREEN_TEXT, viewport);
     }
 
     @Override

@@ -13,7 +13,9 @@ class LevelCatalogTest {
     void shouldContainAllRequiredPrototypeLevels() {
         LevelCatalog catalog = LevelCatalog.createDefault();
 
-        assertEquals(Set.of(LevelId.values()), catalog.getLevels().keySet());
+        for (LevelId levelId : LevelId.values()) {
+            assertTrue(catalog.get(levelId) != null);
+        }
     }
 
     @Test

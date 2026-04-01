@@ -2,23 +2,26 @@ package fr.supdevinci.games.world;
 
 import com.badlogic.gdx.graphics.Color;
 import fr.supdevinci.games.config.GameConfig;
+import fr.supdevinci.games.config.GameConstants;
 import fr.supdevinci.games.progress.KeyId;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Stores the immutable set of level definitions available to the game.
  */
 public final class LevelCatalog {
-    private static final String START = "start";
-    private static final String FROM_HOUSE = "fromHouse";
-    private static final String FROM_LIBRARY = "fromLibrary";
-    private static final String FROM_PORT = "fromPort";
-    private static final String FROM_CEMETERY = "fromCemetery";
-    private static final String FROM_HUB = "fromHub";
-    private static final String FROM_CELLAR = "fromCellar";
+    private static final String START = GameConstants.SPAWN_START;
+    private static final String FROM_HOUSE = GameConstants.SPAWN_FROM_HOUSE;
+    private static final String FROM_LIBRARY = GameConstants.SPAWN_FROM_LIBRARY;
+    private static final String FROM_PORT = GameConstants.SPAWN_FROM_PORT;
+    private static final String FROM_CEMETERY = GameConstants.SPAWN_FROM_CEMETERY;
+    private static final String FROM_HUB = GameConstants.SPAWN_FROM_HUB;
+    private static final String FROM_CELLAR = GameConstants.SPAWN_FROM_CELLAR;
     private static final String RETOUR_HUB = "Retour hub";
 
     private final Map<LevelId, LevelDefinition> levels;
@@ -40,6 +43,7 @@ public final class LevelCatalog {
         levels.put(LevelId.LIBRARY, createLibrary());
         levels.put(LevelId.PORT, createPort());
         levels.put(LevelId.CEMETERY, createCemetery());
+        validateUniqueKeyPlacements(levels);
         return new LevelCatalog(levels);
     }
 
@@ -57,17 +61,14 @@ public final class LevelCatalog {
         return level;
     }
 
-    public Map<LevelId, LevelDefinition> getLevels() {
-        return levels;
-    }
-
     private static LevelDefinition createHub() {
-        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
-        spawns.put(START, spawn(START, 470f, 260f));
-        spawns.put(FROM_HOUSE, spawn(FROM_HOUSE, 470f, 150f));
-        spawns.put(FROM_LIBRARY, spawn(FROM_LIBRARY, 250f, 260f));
-        spawns.put(FROM_PORT, spawn(FROM_PORT, 470f, 340f));
-        spawns.put(FROM_CEMETERY, spawn(FROM_CEMETERY, 700f, 260f));
+        Map<String, SpawnPoint> spawns = spawnMap(
+            spawn(START, 470f, 260f),
+            spawn(FROM_HOUSE, 470f, 150f),
+            spawn(FROM_LIBRARY, 250f, 260f),
+            spawn(FROM_PORT, 470f, 340f),
+            spawn(FROM_CEMETERY, 700f, 260f)
+        );
 
         return LevelDefinition.flat(
             LevelId.HUB,
@@ -99,10 +100,11 @@ public final class LevelCatalog {
 
     private static LevelDefinition createHouse() {
         // Maison = une seule grande map avec pièces suggérées par murs internes.
-        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
-        spawns.put(START, spawn(START, 220f, 180f));
-        spawns.put(FROM_HUB, spawn(FROM_HUB, 470f, 430f));
-        spawns.put(FROM_CELLAR, spawn(FROM_CELLAR, 470f, 120f));
+        Map<String, SpawnPoint> spawns = spawnMap(
+            spawn(START, 220f, 180f),
+            spawn(FROM_HUB, 470f, 430f),
+            spawn(FROM_CELLAR, 470f, 120f)
+        );
 
         return LevelDefinition.flat(
             LevelId.HOUSE,
@@ -128,7 +130,7 @@ public final class LevelCatalog {
                 ),
                 java.util.List.of(
                 transition(TransitionZone.Area.of(440f, 60f, 80f, 16f), LevelId.CELLAR, FROM_HOUSE, "Porte cave",
-                    java.util.List.of(KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY))
+                    List.of(KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY))
                 ,
                 transition(TransitionZone.Area.of(450f, 500f, 60f, 16f), LevelId.HUB, FROM_HOUSE, "Sortie maison")
                 ),
@@ -140,8 +142,9 @@ public final class LevelCatalog {
     }
 
     private static LevelDefinition createCellar() {
-        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
-        spawns.put(FROM_HOUSE, spawn(FROM_HOUSE, 452f, 410f));
+        Map<String, SpawnPoint> spawns = spawnMap(
+            spawn(FROM_HOUSE, 452f, 410f)
+        );
 
         return LevelDefinition.flat(
             LevelId.CELLAR,
@@ -164,16 +167,17 @@ public final class LevelCatalog {
     }
 
     private static LevelDefinition createLibrary() {
-        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
-        spawns.put(FROM_HUB, spawn(FROM_HUB, 840f, 260f));
+        Map<String, SpawnPoint> spawns = spawnMap(
+            spawn(FROM_HUB, 840f, 260f)
+        );
 
         java.util.List<InteractableObject> libraryBooks = java.util.List.of(
-            interactable("book_1", 210f, 110f, 34f, 40f, InteractableType.BOOK, null),
-            interactable("book_2", 290f, 170f, 34f, 40f, InteractableType.BOOK, null),
-            interactable("book_3", 370f, 230f, 34f, 40f, InteractableType.BOOK, KeyId.LIBRARY_KEY),
-            interactable("book_4", 450f, 280f, 34f, 40f, InteractableType.BOOK, null),
-            interactable("book_5", 530f, 130f, 34f, 40f, InteractableType.BOOK, null),
-            interactable("book_6", 610f, 210f, 34f, 40f, InteractableType.BOOK, null)
+            interactable(GameConstants.BOOK_1, 210f, 110f, 34f, 40f, InteractableType.BOOK, null),
+            interactable(GameConstants.BOOK_2, 290f, 170f, 34f, 40f, InteractableType.BOOK, null),
+            interactable(GameConstants.BOOK_WITH_KEY, 370f, 230f, 34f, 40f, InteractableType.BOOK, KeyId.LIBRARY_KEY),
+            interactable(GameConstants.BOOK_4, 450f, 280f, 34f, 40f, InteractableType.BOOK, null),
+            interactable(GameConstants.BOOK_5, 530f, 130f, 34f, 40f, InteractableType.BOOK, null),
+            interactable(GameConstants.BOOK_6, 610f, 210f, 34f, 40f, InteractableType.BOOK, null)
         );
 
         return LevelDefinition.flat(
@@ -204,8 +208,9 @@ public final class LevelCatalog {
     }
 
     private static LevelDefinition createPort() {
-        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
-        spawns.put(FROM_HUB, spawn(FROM_HUB, 470f, 90f));
+        Map<String, SpawnPoint> spawns = spawnMap(
+            spawn(FROM_HUB, 470f, 90f)
+        );
 
         return LevelDefinition.flat(
             LevelId.PORT,
@@ -239,15 +244,16 @@ public final class LevelCatalog {
     }
 
     private static LevelDefinition createCemetery() {
-        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
-        spawns.put(FROM_HUB, spawn(FROM_HUB, 110f, 250f));
+        Map<String, SpawnPoint> spawns = spawnMap(
+            spawn(FROM_HUB, 110f, 250f)
+        );
 
         java.util.List<InteractableObject> graves = java.util.List.of(
-            interactable("grave_1", 180f, 120f, 40f, 28f, InteractableType.GRAVE, null),
-            interactable("grave_2", 340f, 120f, 40f, 28f, InteractableType.GRAVE, null),
-            interactable("grave_3", 500f, 200f, 40f, 28f, InteractableType.GRAVE, null),
-            interactable("grave_4", 700f, 280f, 40f, 28f, InteractableType.GRAVE, KeyId.CEMETERY_KEY),
-            interactable("grave_5", 260f, 200f, 40f, 28f, InteractableType.GRAVE, null)
+            interactable(GameConstants.GRAVE_1, 180f, 120f, 40f, 28f, InteractableType.GRAVE, null),
+            interactable(GameConstants.GRAVE_2, 340f, 120f, 40f, 28f, InteractableType.GRAVE, null),
+            interactable(GameConstants.GRAVE_3, 500f, 200f, 40f, 28f, InteractableType.GRAVE, null),
+            interactable(GameConstants.GRAVE_WITH_KEY, 700f, 280f, 40f, 28f, InteractableType.GRAVE, KeyId.CEMETERY_KEY),
+            interactable(GameConstants.GRAVE_5, 260f, 200f, 40f, 28f, InteractableType.GRAVE, null)
         );
 
         return LevelDefinition.flat(
@@ -303,6 +309,14 @@ public final class LevelCatalog {
         return new SpawnPoint(id, x, y);
     }
 
+    private static Map<String, SpawnPoint> spawnMap(SpawnPoint... spawnPoints) {
+        Map<String, SpawnPoint> spawns = new LinkedHashMap<>();
+        for (SpawnPoint spawnPoint : spawnPoints) {
+            spawns.put(spawnPoint.getId(), spawnPoint);
+        }
+        return spawns;
+    }
+
     private static TransitionZone transition(TransitionZone.Area area, LevelId targetLevelId, String targetSpawnId, String label) {
         return new TransitionZone(area, targetLevelId, targetSpawnId, label);
     }
@@ -319,5 +333,25 @@ public final class LevelCatalog {
     private static InteractableObject interactable(String id, float x, float y, float width, float height,
                                                    InteractableType type, KeyId hiddenKey) {
         return new InteractableObject(id, x, y, width, height, type, hiddenKey);
+    }
+
+    private static void validateUniqueKeyPlacements(Map<LevelId, LevelDefinition> levels) {
+        EnumSet<KeyId> seen = EnumSet.noneOf(KeyId.class);
+        for (LevelDefinition level : levels.values()) {
+            for (KeyPickup keyPickup : level.getKeyPickups()) {
+                registerUniqueKeyPlacement(seen, keyPickup.getKeyId(), level.getId(), keyPickup.getId());
+            }
+            for (InteractableObject interactableObject : level.getInteractableObjects()) {
+                interactableObject.getHiddenKey().ifPresent(keyId ->
+                    registerUniqueKeyPlacement(seen, keyId, level.getId(), interactableObject.getId())
+                );
+            }
+        }
+    }
+
+    private static void registerUniqueKeyPlacement(EnumSet<KeyId> seen, KeyId keyId, LevelId levelId, String sourceId) {
+        if (!seen.add(keyId)) {
+            throw new IllegalStateException("Duplicate key placement for " + keyId + " at " + levelId + "/" + sourceId);
+        }
     }
 }
