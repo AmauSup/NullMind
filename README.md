@@ -1,33 +1,89 @@
-# Game
+# Trauma Worlds POC
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+Prototype jouable en Java avec libGDX, pensé comme base propre et extensible pour un jeu centré sur des niveaux symboliques liés aux peurs et traumatismes.
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws a simple GUI on the screen.
+## Hypothèses retenues
 
-## Platforms
+- Le POC privilégie une base saine plutôt qu'un gameplay complet.
+- Les maps utilisent des rectangles et des couleurs pour éviter toute dépendance à des assets artistiques.
+- Une seule entité jouable est nécessaire à ce stade.
+- Les niveaux sont fixes à l'écran pour garder la navigation simple et lisible.
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+## Arborescence utile
 
-## Gradle
+- `core/src/main/java/fr/supdevinci/games/Main.java` : point d'entrée métier libGDX.
+- `core/src/main/java/fr/supdevinci/games/screen` : écrans `TitleScreen` et `GameScreen`.
+- `core/src/main/java/fr/supdevinci/games/world` : définitions de maps, transitions, obstacles et état du monde.
+- `core/src/main/java/fr/supdevinci/games/logic` : logique de déplacement testable hors rendu.
+- `core/src/main/java/fr/supdevinci/games/render` : rendu du monde et du HUD.
+- `core/src/main/java/fr/supdevinci/games/input` : lecture clavier.
+- `core/src/test/java/fr/supdevinci/games` : tests unitaires de logique.
+- `lwjgl3/src/main/java/fr/supdevinci/games/lwjgl3/Lwjgl3Launcher.java` : launcher desktop.
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+## Architecture
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+- `Main` instancie les ressources partagées et gère le changement d'écran.
+- `TitleScreen` démontre le système de screens sans complexité inutile.
+- `GameScreen` orchestre la boucle de jeu : input, update, rendu, HUD.
+- `GameWorld` contient l'état mutable de la session et les transitions entre maps.
+- `LevelCatalog` décrit les 6 maps du POC : Hub, Maison, Cave, Bibliothèque, Aquarium, Cimetière.
+- `PlayerMovementService` porte la logique testable de déplacement, de collision simple et de clamp dans la map.
+- `GameAssets` centralise les ressources libGDX à libérer dans `dispose()`.
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+## Dépendances Gradle
+
+### Plugins
+
+- `java-library` via le build parent pour le module `core`
+- `application` pour le launcher `lwjgl3`
+
+### Dépendances principales
+
+- `com.badlogicgames.gdx:gdx`
+- `com.badlogicgames.gdx:gdx-backend-lwjgl3`
+- `com.badlogicgames.gdx:gdx-platform:natives-desktop`
+
+### Dépendances de test
+
+- `org.junit.jupiter:junit-jupiter-api`
+- `org.junit.jupiter:junit-jupiter-engine`
+
+## Commandes utiles
+
+- Lancer le jeu : `./gradlew lwjgl3:run` ou `gradlew.bat lwjgl3:run`
+- Lancer les tests : `./gradlew core:test` ou `gradlew.bat core:test`
+- Construire le projet : `./gradlew build` ou `gradlew.bat build`
+
+## Ce que couvre le POC
+
+- déplacement au clavier avec `WASD` ou flèches
+- 6 maps simples mais réelles dans la structure du jeu
+- transitions par zones réutilisables
+- collisions simples avec obstacles et bords de map
+- HUD minimal avec nom de la map et sorties visibles
+- base testable sur la logique non graphique
+
+## Stratégie de test
+
+- Test unitaire du déplacement libre
+- Test unitaire du clamp sur les bords du monde
+- Test unitaire du blocage par obstacle
+- Test du catalogue de niveaux et des transitions du hub
+- Test de transition du monde entre le hub et la maison
+
+Le rendu libGDX n'est pas testé ici : il dépend fortement de la boucle graphique. La priorité est de tester les règles métier qui risquent de casser lors des évolutions futures.
+
+## Extension naturelle après le POC
+
+- Ennemis : ajouter une interface d'entité mise à jour par `GameWorld`
+- Inventaire / clés : introduire un `Inventory` dans l'état de session
+- Triggers narratifs : ajouter des zones d'événements proches de `TransitionZone`
+- Son / bruit : créer un système d'événements de gameplay consommé par l'audio et l'IA
+- Score / progression : enrichir l'état de session avec objectifs, flags et sauvegarde
+- IA simple : injecter des comportements par niveau sans mélanger logique et rendu
+
+## Cycle de vie des ressources
+
+- Création : dans `Main.create()`
+- Utilisation : par injection légère via `GameContext`
+- Libération : dans `Main.dispose()` pour les ressources partagées, et via `Screen.dispose()` lors d'un changement d'écran
