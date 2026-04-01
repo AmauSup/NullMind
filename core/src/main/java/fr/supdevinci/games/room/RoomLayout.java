@@ -1,12 +1,14 @@
 package fr.supdevinci.games.room;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import fr.supdevinci.games.config.ColorPalette;
 import fr.supdevinci.games.progress.KeyId;
-import fr.supdevinci.games.world.Obstacle;
 import fr.supdevinci.games.world.KeyPickup;
+import fr.supdevinci.games.world.Obstacle;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +27,19 @@ import java.util.Map;
  * Testable: can verify room positions, doors, obstacles without rendering.
  */
 public final class RoomLayout {
+
+    private static final String HALLWAY = "hallway";
+    private static final String SISTER_BEDROOM = "sister_bedroom";
+    private static final String PARENTS_BEDROOM = "parents_bedroom";
+    private static final String PLAYER_BEDROOM = "player_bedroom";
+    private static final String LIVING_ROOM = "living_room";
+    private static final String KITCHEN = "kitchen";
+    private static final String CELLAR = "cellar";
+
+    private static final String TO_HALLWAY = "to_hallway";
+    private static final String TO_CELLAR = "to_cellar";
+    private static final String VERS_SALON = "Vers salon";
+    private static final String VERS_COULOIR = "Vers couloir";
     
     // Room dimensions (interior)
     private static final float ROOM_WIDTH = 300f;
@@ -52,21 +67,21 @@ public final class RoomLayout {
         Map<String, Room> rooms = new LinkedHashMap<>();
 
         // Hallway center (main hub of house)
-        rooms.put("hallway", createHallway());
+        rooms.put(HALLWAY, createHallway());
 
         // Row top: Sister & Parents
-        rooms.put("sister_bedroom", createSisterBedroom());
-        rooms.put("parents_bedroom", createParentsBedroom());
+        rooms.put(SISTER_BEDROOM, createSisterBedroom());
+        rooms.put(PARENTS_BEDROOM, createParentsBedroom());
 
         // Row middle: Player & Living Room
-        rooms.put("player_bedroom", createPlayerBedroom());
-        rooms.put("living_room", createLivingRoom());
+        rooms.put(PLAYER_BEDROOM, createPlayerBedroom());
+        rooms.put(LIVING_ROOM, createLivingRoom());
 
         // Row bottom: Kitchen
-        rooms.put("kitchen", createKitchen());
+        rooms.put(KITCHEN, createKitchen());
 
         // Cellar (bottom-most, special access)
-        rooms.put("cellar", createCellar());
+        rooms.put(CELLAR, createCellar());
 
         return rooms;
     }
@@ -74,198 +89,217 @@ public final class RoomLayout {
     // Room definitions
 
     private static Room createHallway() {
-        String id = "hallway";
         float x = COL_CENTER;
         float y = ROW_MIDDLE;
         
         // Hallway is narrow connector, few obstacles
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 30f, y + 80f, 40f, 30f)   // small pillar
         );
 
         // Doors to other rooms
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_player_bd", x + 10f, y + 4f, 50f, 16f, "Vers chambre", "player_bedroom", 
-                     java.util.List.of(), DoorState.CLOSED),
-            new Door("to_sister_bd", x + 10f, y + ROOM_HEIGHT - 20f, 50f, 16f, "Vers chambre sœur", "sister_bedroom",
-                     java.util.List.of(), DoorState.LOCKED),
-            new Door("to_parents_bd", x + 90f, y + ROOM_HEIGHT - 20f, 50f, 16f, "Vers chambre parents", "parents_bedroom",
-                     java.util.List.of(), DoorState.LOCKED),
-            new Door("to_kitchen", x + 90f, y + 4f, 50f, 16f, "Vers cuisine", "kitchen",
-                     java.util.List.of(), DoorState.CLOSED),
-            new Door("to_living_room", x + (HALLWAY_WIDTH * 1.5f) - 16f, y + 110f, 16f, 50f, "Vers salon", "living_room",
-                     java.util.List.of(), DoorState.CLOSED),
-            new Door("to_cellar", x + (HALLWAY_WIDTH * 1.5f) - 16f, y + 40f, 16f, 50f, "Vers cave", "cellar",
-                     java.util.List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY),
-                     DoorState.LOCKED)
+        List<Door> doors = List.of(
+            door("to_player_bd", Door.Geometry.of(x + 10f, y + 4f, 50f, 16f), "Vers chambre", PLAYER_BEDROOM, List.of(), DoorState.CLOSED),
+            door("to_sister_bd", Door.Geometry.of(x + 10f, y + ROOM_HEIGHT - 20f, 50f, 16f), "Vers chambre sœur", SISTER_BEDROOM, List.of(), DoorState.LOCKED),
+            door("to_parents_bd", Door.Geometry.of(x + 90f, y + ROOM_HEIGHT - 20f, 50f, 16f), "Vers chambre parents", PARENTS_BEDROOM, List.of(), DoorState.LOCKED),
+            door("to_kitchen", Door.Geometry.of(x + 90f, y + 4f, 50f, 16f), "Vers cuisine", KITCHEN, List.of(), DoorState.CLOSED),
+            door("to_living_room", Door.Geometry.of(x + (HALLWAY_WIDTH * 1.5f) - 16f, y + 110f, 16f, 50f), VERS_SALON, LIVING_ROOM, List.of(), DoorState.CLOSED),
+            door(TO_CELLAR, Door.Geometry.of(x + (HALLWAY_WIDTH * 1.5f) - 16f, y + 40f, 16f, 50f), "Vers cave", CELLAR,
+                List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY), DoorState.LOCKED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of();
+        List<KeyPickup> keys = List.of();
         Rectangle spawn = new Rectangle(x + 30f, y + 30f, 40f, 40f);
 
-        return new Room(id, "Couloir", "Le centre de la maison. Portes partout.",
-                        ColorPalette.HALLWAY, x, y, HALLWAY_WIDTH * 1.5f, ROOM_HEIGHT, 
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(HALLWAY, "Couloir", "Le centre de la maison. Portes partout.", ColorPalette.HALLWAY,
+            new Rectangle(x, y, HALLWAY_WIDTH * 1.5f, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
     }
 
     private static Room createPlayerBedroom() {
-        String id = "player_bedroom";
         float x = COL_LEFT;
         float y = ROW_MIDDLE;
 
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 50f, y + 80f, 100f, 40f),   // bed
             new Obstacle(x + 200f, y + 100f, 60f, 80f)   // wardrobe
         );
 
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_hallway", x + ROOM_WIDTH - 16f, y + 110f, 16f, 50f, "Vers couloir", "hallway",
-                     java.util.List.of(), DoorState.CLOSED)
+        List<Door> doors = List.of(
+            door(TO_HALLWAY, Door.Geometry.of(x + ROOM_WIDTH - 16f, y + 110f, 16f, 50f), VERS_COULOIR, HALLWAY, List.of(), DoorState.CLOSED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of(
+        List<KeyPickup> keys = List.of(
             new KeyPickup("player_bd_key", x + 250f, y + 50f, 20f, 20f, KeyId.HOUSE_KEY)
         );
 
         Rectangle spawn = new Rectangle(x + 120f, y + 120f, 40f, 40f);
 
-        return new Room(id, "Ma chambre", "Refuge tranquille. Y a une clé.",
-                        ColorPalette.BEDROOM_PLAYER, x, y, ROOM_WIDTH, ROOM_HEIGHT,
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(PLAYER_BEDROOM, "Ma chambre", "Refuge tranquille. Y a une clé.", ColorPalette.BEDROOM_PLAYER,
+            new Rectangle(x, y, ROOM_WIDTH, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
     }
 
     private static Room createSisterBedroom() {
-        String id = "sister_bedroom";
         float x = COL_LEFT;
         float y = ROW_TOP;
 
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 40f, y + 60f, 120f, 60f),   // bed
             new Obstacle(x + 180f, y + 80f, 80f, 100f)   // desk & stuff
         );
 
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_hallway", x + 120f, y + 4f, 80f, 16f, "Vers couloir", "hallway",
-                     java.util.List.of(), DoorState.LOCKED)
+        List<Door> doors = List.of(
+            door(TO_HALLWAY, Door.Geometry.of(x + 120f, y + 4f, 80f, 16f), VERS_COULOIR, HALLWAY, List.of(), DoorState.LOCKED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of();
+        List<KeyPickup> keys = List.of();
         Rectangle spawn = new Rectangle(x + 100f, y + 100f, 40f, 40f);
 
-        return new Room(id, "Chambre de ma sœur", "Fermée. Je peux pas entrer.",
-                        ColorPalette.BEDROOM_SISTER, x, y, ROOM_WIDTH, ROOM_HEIGHT,
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(SISTER_BEDROOM, "Chambre de ma sœur", "Fermée. Je peux pas entrer.", ColorPalette.BEDROOM_SISTER,
+            new Rectangle(x, y, ROOM_WIDTH, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
     }
 
     private static Room createParentsBedroom() {
-        String id = "parents_bedroom";
         float x = COL_RIGHT;
         float y = ROW_TOP;
 
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 40f, y + 60f, 140f, 80f),   // large bed
             new Obstacle(x + 200f, y + 100f, 70f, 100f)  // furniture
         );
 
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_hallway", x + 120f, y + 4f, 80f, 16f, "Vers couloir", "hallway",
-                     java.util.List.of(), DoorState.LOCKED)
+        List<Door> doors = List.of(
+            door(TO_HALLWAY, Door.Geometry.of(x + 120f, y + 4f, 80f, 16f), VERS_COULOIR, HALLWAY, List.of(), DoorState.LOCKED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of();
+        List<KeyPickup> keys = List.of();
         Rectangle spawn = new Rectangle(x + 100f, y + 100f, 40f, 40f);
 
-        return new Room(id, "Chambre des parents", "Privée, pas d'accès.",
-                        ColorPalette.BEDROOM_PARENTS, x, y, ROOM_WIDTH, ROOM_HEIGHT,
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(PARENTS_BEDROOM, "Chambre des parents", "Privée, pas d'accès.", ColorPalette.BEDROOM_PARENTS,
+            new Rectangle(x, y, ROOM_WIDTH, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
     }
 
     private static Room createKitchen() {
-        String id = "kitchen";
         float x = COL_CENTER;
         float y = ROW_BOTTOM + 100f;
 
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 40f, y + 100f, 100f, 60f),   // kitchen counter
             new Obstacle(x + 160f, y + 80f, 80f, 40f),    // table
             new Obstacle(x + 200f, y + 30f, 70f, 50f)     // fridge
         );
 
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_hallway", x + 110f, y + ROOM_HEIGHT - 20f, 80f, 16f, "Vers couloir", "hallway",
-                     java.util.List.of(), DoorState.CLOSED),
-            new Door("to_living", x + ROOM_WIDTH - 16f, y + 110f, 16f, 50f, "Vers salon", "living_room",
-                     java.util.List.of(), DoorState.CLOSED)
+        List<Door> doors = List.of(
+            door(TO_HALLWAY, Door.Geometry.of(x + 110f, y + ROOM_HEIGHT - 20f, 80f, 16f), VERS_COULOIR, HALLWAY, List.of(), DoorState.CLOSED),
+            door("to_living", Door.Geometry.of(x + ROOM_WIDTH - 16f, y + 110f, 16f, 50f), VERS_SALON, LIVING_ROOM, List.of(), DoorState.CLOSED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of(
+        List<KeyPickup> keys = List.of(
             new KeyPickup("kitchen_key", x + 240f, y + 140f, 20f, 20f, KeyId.LIBRARY_KEY)
         );
 
         Rectangle spawn = new Rectangle(x + 80f, y + 60f, 40f, 40f);
 
-        return new Room(id, "Cuisine", "Pièce centrale. Clé de biblio ici.",
-                        ColorPalette.KITCHEN, x, y, ROOM_WIDTH, ROOM_HEIGHT,
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(KITCHEN, "Cuisine", "Pièce centrale. Clé de biblio ici.", ColorPalette.KITCHEN,
+            new Rectangle(x, y, ROOM_WIDTH, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
     }
 
     private static Room createLivingRoom() {
-        String id = "living_room";
         float x = COL_RIGHT;
         float y = ROW_MIDDLE;
 
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 50f, y + 80f, 120f, 100f),   // sofa
             new Obstacle(x + 180f, y + 60f, 80f, 40f),    // TV / media
             new Obstacle(x + 40f, y + 30f, 60f, 40f)      // small table
         );
 
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_hallway", x + 4f, y + 120f, 16f, 50f, "Vers couloir", "hallway",
-                     java.util.List.of(), DoorState.CLOSED),
-            new Door("to_kitchen", x + 4f, y + 40f, 16f, 50f, "Vers cuisine", "kitchen",
-                     java.util.List.of(), DoorState.CLOSED),
-            new Door("to_cellar", x + 120f, y + 4f, 80f, 16f, "Vers cave", "cellar",
-                     java.util.List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY),
-                     DoorState.LOCKED)
+        List<Door> doors = List.of(
+            door(TO_HALLWAY, Door.Geometry.of(x + 4f, y + 120f, 16f, 50f), VERS_COULOIR, HALLWAY, List.of(), DoorState.CLOSED),
+            door("to_kitchen", Door.Geometry.of(x + 4f, y + 40f, 16f, 50f), "Vers cuisine", KITCHEN, List.of(), DoorState.CLOSED),
+            door(TO_CELLAR, Door.Geometry.of(x + 120f, y + 4f, 80f, 16f), "Vers cave", CELLAR,
+                List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY), DoorState.LOCKED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of(
+        List<KeyPickup> keys = List.of(
             new KeyPickup("living_room_key", x + 240f, y + 140f, 20f, 20f, KeyId.PORT_KEY)
         );
 
         Rectangle spawn = new Rectangle(x + 100f, y + 120f, 40f, 40f);
 
-        return new Room(id, "Salon", "Confortable. Pièce du port.",
-                        ColorPalette.LIVING_ROOM, x, y, ROOM_WIDTH, ROOM_HEIGHT,
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(LIVING_ROOM, "Salon", "Confortable. Pièce du port.", ColorPalette.LIVING_ROOM,
+            new Rectangle(x, y, ROOM_WIDTH, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
     }
 
     private static Room createCellar() {
-        String id = "cellar";
         float x = COL_CENTER;
         float y = ROW_BOTTOM;
 
-        java.util.List<Obstacle> obstacles = java.util.List.of(
+        List<Obstacle> obstacles = List.of(
             new Obstacle(x + 20f, y + 80f, 60f, 100f),    // pillar
             new Obstacle(x + 100f, y + 100f, 80f, 40f),   // storage shelf
             new Obstacle(x + 200f, y + 60f, 70f, 80f)     // boxes
         );
 
-        java.util.List<Door> doors = java.util.List.of(
-            new Door("to_living", x + 120f, y + ROOM_HEIGHT - 20f, 80f, 16f, "Vers salon", "living_room",
-                     java.util.List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY),
-                     DoorState.LOCKED)
+        List<Door> doors = List.of(
+            door("to_living", Door.Geometry.of(x + 120f, y + ROOM_HEIGHT - 20f, 80f, 16f), VERS_SALON, LIVING_ROOM,
+                List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY, KeyId.CEMETERY_KEY), DoorState.LOCKED)
         );
 
-        java.util.List<KeyPickup> keys = java.util.List.of(
+        List<KeyPickup> keys = List.of(
             new KeyPickup("cellar_key", x + 240f, y + 80f, 20f, 20f, KeyId.CEMETERY_KEY)
         );
 
         Rectangle spawn = new Rectangle(x + 50f, y + 50f, 40f, 40f);
 
-        return new Room(id, "Cave", "Lieu secret. Clé cimetière. FIN du POC.",
-                        ColorPalette.CELLAR, x, y, ROOM_WIDTH + 50f, ROOM_HEIGHT,
-                        obstacles, doors, keys, spawn);
+        return roomBuilder(CELLAR, "Cave", "Lieu secret. Clé cimetière. FIN du POC.", ColorPalette.CELLAR,
+            new Rectangle(x, y, ROOM_WIDTH + 50f, ROOM_HEIGHT))
+            .obstacles(obstacles)
+            .doors(doors)
+            .keyPickups(keys)
+            .spawnArea(spawn)
+            .build();
+    }
+
+    private static Door door(String id, Door.Geometry geometry, String label,
+                             String targetRoomId, List<KeyId> requiredKeys, DoorState state) {
+        return Door.builder(id, geometry, label, targetRoomId)
+            .requiredKeys(requiredKeys)
+            .initialState(state)
+            .build();
+    }
+
+    private static Room.Builder roomBuilder(String id, String name, String description, Color color,
+                                            Rectangle bounds) {
+        return Room.builder(id, name, description, color, bounds);
     }
 }

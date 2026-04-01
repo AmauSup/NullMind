@@ -12,11 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for Door state and access logic.
  */
 class DoorTest {
+    private static final String LABEL = "Test Door";
+    private static final String TARGET_ROOM = "room2";
+
+    private static Door createDoor(String id, List<KeyId> requiredKeys, DoorState state) {
+        return Door.builder(id, Door.Geometry.of(100f, 100f, 80f, 20f), LABEL, TARGET_ROOM)
+            .requiredKeys(requiredKeys)
+            .initialState(state)
+            .build();
+    }
     
     @Test
     void shouldAllowPassageWhenDoorIsOpen() {
-        Door door = new Door("door1", 100, 100, 80, 20, "Test Door", "room2", 
-                            List.of(), DoorState.OPEN);
+        Door door = createDoor("door1", List.of(), DoorState.OPEN);
         Inventory empty = new Inventory();
         
         assertTrue(door.canPass(empty));
@@ -24,8 +32,7 @@ class DoorTest {
     
     @Test
     void shouldAllowPassageWhenDoorIsClosedWithoutKeyRequirement() {
-        Door door = new Door("door2", 100, 100, 80, 20, "Test Door", "room2",
-                            List.of(), DoorState.CLOSED);
+        Door door = createDoor("door2", List.of(), DoorState.CLOSED);
         Inventory empty = new Inventory();
         
         assertTrue(door.canPass(empty));
@@ -33,8 +40,7 @@ class DoorTest {
     
     @Test
     void shouldBlockPassageWhenDoorIsLockedAndKeysAreMissing() {
-        Door door = new Door("door3", 100, 100, 80, 20, "Test Door", "room2",
-                            List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY), DoorState.LOCKED);
+        Door door = createDoor("door3", List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY), DoorState.LOCKED);
         Inventory empty = new Inventory();
         
         assertFalse(door.canPass(empty));
@@ -42,8 +48,7 @@ class DoorTest {
     
     @Test
     void shouldAllowPassageWhenAllKeysArePresent() {
-        Door door = new Door("door4", 100, 100, 80, 20, "Test Door", "room2",
-                            List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY), DoorState.LOCKED);
+        Door door = createDoor("door4", List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY), DoorState.LOCKED);
         Inventory inventory = new Inventory();
         inventory.addKey(KeyId.HOUSE_KEY);
         inventory.addKey(KeyId.LIBRARY_KEY);
@@ -53,8 +58,7 @@ class DoorTest {
     
     @Test
     void shouldBlockPassageWhenSomeKeysAreMissing() {
-        Door door = new Door("door5", 100, 100, 80, 20, "Test Door", "room2",
-                            List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY), DoorState.LOCKED);
+        Door door = createDoor("door5", List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY), DoorState.LOCKED);
         Inventory inventory = new Inventory();
         inventory.addKey(KeyId.HOUSE_KEY);
         
@@ -63,8 +67,7 @@ class DoorTest {
     
     @Test
     void shouldTransitionStateWhenOpened() {
-        Door door = new Door("door6", 100, 100, 80, 20, "Test Door", "room2",
-                            List.of(), DoorState.CLOSED);
+        Door door = createDoor("door6", List.of(), DoorState.CLOSED);
         
         assertEquals(DoorState.CLOSED, door.getState());
         door.open();
@@ -73,8 +76,10 @@ class DoorTest {
     
     @Test
     void shouldProvideCorrectMessageWhenBlockedByMissingKeys() {
-        Door door = new Door("door7", 100, 100, 80, 20, "My Door", "room2",
-                            List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY), DoorState.LOCKED);
+        Door door = Door.builder("door7", Door.Geometry.of(100f, 100f, 80f, 20f), "My Door", TARGET_ROOM)
+            .requiredKeys(List.of(KeyId.HOUSE_KEY, KeyId.LIBRARY_KEY, KeyId.PORT_KEY))
+            .initialState(DoorState.LOCKED)
+            .build();
         Inventory inventory = new Inventory();
         inventory.addKey(KeyId.HOUSE_KEY);
         

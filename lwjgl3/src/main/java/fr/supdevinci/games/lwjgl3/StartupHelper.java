@@ -28,6 +28,8 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A helper object for game startup, featuring three utilities related to LWJGL3 on various operating systems.
@@ -45,17 +47,24 @@ import java.util.Locale;
  * @author damios
  */
 public class StartupHelper {
+    private static final Logger LOGGER = Logger.getLogger(StartupHelper.class.getName());
 
 	private StartupHelper() {}
 
 	private static final String JVM_RESTARTED_ARG = "jvmIsRestarted";
+	private static final String GL_THREADED_OPTIMIZATIONS = "__GL_THREADED_OPTIMIZATIONS";
+	private static final String DISABLED_VALUE = "0";
+	private static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
+	private static final String USER_NAME = "user.name";
+	private static final String WINDOWS_PROGRAM_DATA = "ProgramData";
+	private static final String LINUX_DRIVER_PATH = System.getProperty("startuphelper.linux.driverPath", "/proc/driver");
 
 	/**
 	 * Must only be called on Linux. Check OS first (or use short-circuit evaluation)!
 	 * @return whether NVIDIA drivers are present on Linux.
 	 */
 	public static boolean isLinuxNvidia() {
-		String[] drivers = new File("/proc/driver").list(
+		String[] drivers = new File(LINUX_DRIVER_PATH).list(
 			(dir, path) -> path.toUpperCase(Locale.ROOT).contains("NVIDIA")
 		);
 		if (drivers == null) return false;
@@ -105,27 +114,27 @@ public class StartupHelper {
 		String osName = System.getProperty("os.name").toLowerCase(Locale.ROOT);
 		if (osName.contains("mac")) return startNewJvm0(/*isMac =*/ true, inheritIO);
 		if (osName.contains("windows")) {
-			// Here, we are trying to work around an issue with how LWJGL3 loads its extracted .dll files.
-			// By default, LWJGL3 extracts to the directory specified by "java.io.tmpdir": usually, the user's home.
-			// If the user's name has non-ASCII (or some non-alphanumeric) characters in it, that would fail.
-			// By extracting to the relevant "ProgramData" folder, which is usually "C:\ProgramData", we avoid this.
-			// We also temporarily change the "user.name" property to one without any chars that would be invalid.
-			// We revert our changes immediately after loading LWJGL3 natives.
-			String programData = System.getenv("ProgramData");
-			if (programData == null) programData = "C:\\Temp"; // if ProgramData isn't set, try some fallback.
-			String prevTmpDir = System.getProperty("java.io.tmpdir", programData);
-			String prevUser = System.getProperty("user.name", "libGDX_User");
-			System.setProperty("java.io.tmpdir", programData + "\\libGDX-temp");
-			System.setProperty(
-				"user.name",
-				("User_" + prevUser.hashCode() + "_GDX" + Version.VERSION).replace('.', '_')
-			);
-			Lwjgl3NativesLoader.load();
-			System.setProperty("java.io.tmpdir", prevTmpDir);
-			System.setProperty("user.name", prevUser);
+			applyWindowsNativeLoadWorkaround();
 			return false;
 		}
 		return startNewJvm0(/*isMac =*/ false, inheritIO);
+	}
+
+	private static void applyWindowsNativeLoadWorkaround() {
+		String programData = System.getenv(WINDOWS_PROGRAM_DATA);
+		if (programData == null) {
+			programData = "C:\\Temp";
+		}
+		String prevTmpDir = System.getProperty(JAVA_IO_TMPDIR, programData);
+		String prevUser = System.getProperty(USER_NAME, "libGDX_User");
+		System.setProperty(JAVA_IO_TMPDIR, programData + "\\libGDX-temp");
+		System.setProperty(
+			USER_NAME,
+			("User_" + prevUser.hashCode() + "_GDX" + Version.VERSION).replace('.', '_')
+		);
+		Lwjgl3NativesLoader.load();
+		System.setProperty(JAVA_IO_TMPDIR, prevTmpDir);
+		System.setProperty(USER_NAME, prevUser);
 	}
 
 	private static final String MAC_JRE_ERR_MSG = "A Java installation could not be found. If you are distributing this app with a bundled JRE, be sure to set the '-XstartOnFirstThread' argument manually!";
@@ -146,29 +155,14 @@ public class StartupHelper {
 	 */
 	public static boolean startNewJvm0(boolean isMac, boolean inheritIO) {
 		long processID = getProcessID(isMac);
-		if (!isMac) {
-			// No need to restart non-NVIDIA Linux
-			if (!isLinuxNvidia()) return false;
-			// check whether __GL_THREADED_OPTIMIZATIONS is already disabled
-			if ("0".equals(System.getenv("__GL_THREADED_OPTIMIZATIONS"))) return false;
-		} else {
-			// There is no need for -XstartOnFirstThread on Graal native image
-			if (!System.getProperty("org.graalvm.nativeimage.imagecode", "").isEmpty()) return false;
-
-			// Checks if we are already on the main thread, such as from running via Construo.
-			long objcMsgSend = ObjCRuntime.getLibrary().getFunctionAddress("objc_msgSend");
-			long nsThread = ObjCRuntime.objc_getClass("NSThread");
-			long currentThread = JNI.invokePPP(nsThread, ObjCRuntime.sel_getUid("currentThread"), objcMsgSend);
-			boolean isMainThread = JNI.invokePPZ(currentThread, ObjCRuntime.sel_getUid("isMainThread"), objcMsgSend);
-			if (isMainThread) return false;
-
-			if ("1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_" + processID))) return false;
+		if (!isRestartNeeded(isMac, processID)) {
+			return false;
 		}
 
 		// Check whether this JVM process is a child JVM process already.
 		// This state shouldn't usually be reachable, but this stops us from endlessly spawning new child JVM processes.
 		if ("true".equals(System.getProperty(JVM_RESTARTED_ARG))) {
-			System.err.println(CHILD_LOOP_ERR_MSG);
+			LOGGER.severe(CHILD_LOOP_ERR_MSG);
 			return false;
 		}
 
@@ -179,7 +173,11 @@ public class StartupHelper {
 		// If targeting Java 9 or higher, you could use the following instead of the above line:
 		//String javaExecPath = ProcessHandle.current().info().command().orElseThrow()
 		if (!(new File(javaExecPath).exists())) {
-			System.err.println(getJreErrMsg(isMac));
+			if (isMac) {
+				LOGGER.severe(MAC_JRE_ERR_MSG);
+			} else {
+				LOGGER.severe(LINUX_JRE_ERR_MSG);
+			}
 			return false;
 		}
 
@@ -189,35 +187,67 @@ public class StartupHelper {
 		jvmArgs.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments());
 		jvmArgs.add("-cp");
 		jvmArgs.add(System.getProperty("java.class.path"));
-		String mainClass = System.getenv("JAVA_MAIN_CLASS_" + processID);
+		String mainClass = resolveMainClass(processID);
 		if (mainClass == null) {
-			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-			if (trace.length > 0) mainClass = trace[trace.length - 1].getClassName();
-			else {
-				System.err.println("The main class could not be determined.");
-				return false;
-			}
+			return false;
 		}
 		jvmArgs.add(mainClass);
 
 		try {
 			ProcessBuilder processBuilder = new ProcessBuilder(jvmArgs);
-			if (!isMac) processBuilder.environment().put("__GL_THREADED_OPTIMIZATIONS", "0");
+			if (!isMac) processBuilder.environment().put(GL_THREADED_OPTIMIZATIONS, DISABLED_VALUE);
 
-			if (!inheritIO) processBuilder.start();
-			else processBuilder.inheritIO().start().waitFor();
+			if (!inheritIO) {
+				processBuilder.start();
+			} else {
+				processBuilder.inheritIO().start().waitFor();
+			}
+		} catch (InterruptedException interruptedException) {
+			Thread.currentThread().interrupt();
+			LOGGER.log(Level.SEVERE, "The restarted JVM process was interrupted.", interruptedException);
 		} catch (Exception e) {
-			System.err.println("There was a problem restarting the JVM.");
-			// noinspection CallToPrintStackTrace
-			e.printStackTrace();
+			LOGGER.log(Level.SEVERE, "There was a problem restarting the JVM.", e);
 		}
 
 		return true;
 	}
 
-	private static String getJreErrMsg(boolean isMac) {
-		if (isMac) return MAC_JRE_ERR_MSG;
-		else return LINUX_JRE_ERR_MSG;
+	private static boolean isRestartNeeded(boolean isMac, long processID) {
+		if (!isMac) {
+			return isLinuxNvidia() && !DISABLED_VALUE.equals(System.getenv(GL_THREADED_OPTIMIZATIONS));
+		}
+
+		if (!System.getProperty("org.graalvm.nativeimage.imagecode", "").isEmpty()) {
+			return false;
+		}
+
+		if (isMacMainThread()) {
+			return false;
+		}
+
+		return !"1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_" + processID));
+	}
+
+	private static boolean isMacMainThread() {
+		long objcMsgSend = ObjCRuntime.getLibrary().getFunctionAddress("objc_msgSend");
+		long nsThread = ObjCRuntime.objc_getClass("NSThread");
+		long currentThread = JNI.invokePPP(nsThread, ObjCRuntime.sel_getUid("currentThread"), objcMsgSend);
+		return JNI.invokePPZ(currentThread, ObjCRuntime.sel_getUid("isMainThread"), objcMsgSend);
+	}
+
+	private static String resolveMainClass(long processID) {
+		String mainClass = System.getenv("JAVA_MAIN_CLASS_" + processID);
+		if (mainClass != null) {
+			return mainClass;
+		}
+
+		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+		if (trace.length > 0) {
+			return trace[trace.length - 1].getClassName();
+		}
+
+		LOGGER.severe("The main class could not be determined.");
+		return null;
 	}
 
 	private static long getProcessID(boolean isMac) {

@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameWorldKeyFlowTest {
+    private static final String FROM_HUB = "fromHub";
+    private static final String START = "start";
 
     private static GameWorld freshWorld() {
         return new GameWorld(LevelCatalog.createDefault(), new PlayerMovementService());
@@ -18,20 +20,20 @@ class GameWorldKeyFlowTest {
     void shouldPhysicallyBlockCaveDoorWhenLocked() {
         GameWorld gameWorld = freshWorld();
 
-        // Place player just below locked cave door and try to move upward through it.
-        gameWorld.getPlayer().setPosition(470f, 470f);
-        gameWorld.update(new MovementIntent(0f, 1f), 0.20f);
+        // Place player just above locked cave door and try to move downward through it.
+        gameWorld.getPlayer().setPosition(470f, 90f);
+        gameWorld.update(new MovementIntent(0f, -1f), 0.20f);
 
         // Door collision blocks movement while keys are missing.
-        assertTrue(gameWorld.getPlayer().getY() <= 470f);
+        assertTrue(gameWorld.getPlayer().getY() >= 90f);
         assertEquals(LevelId.HOUSE, gameWorld.getCurrentLevel().getId());
     }
 
     @Test
     void shouldBlockCaveWhenMissingAllKeys() {
         GameWorld gameWorld = freshWorld();
-        // Porte cave en haut de la maison.
-        gameWorld.getPlayer().setPosition(470f, 502f);
+        // Porte cave en bas de la maison.
+        gameWorld.getPlayer().setPosition(470f, 62f);
         gameWorld.update(new MovementIntent(0f, 0f), 0.016f);
 
         assertEquals(LevelId.HOUSE, gameWorld.getCurrentLevel().getId());
@@ -43,26 +45,26 @@ class GameWorldKeyFlowTest {
         GameWorld gameWorld = freshWorld();
 
         // Bibliothèque
-        gameWorld.loadLevel(LevelId.LIBRARY, "fromHub");
+        gameWorld.loadLevel(LevelId.LIBRARY, FROM_HUB);
         gameWorld.getPlayer().setPosition(760f, 290f);
         gameWorld.update(new MovementIntent(0f, 0f), 0.016f);
         assertTrue(gameWorld.getInventory().hasKey(KeyId.LIBRARY_KEY));
 
         // Cimetière
-        gameWorld.loadLevel(LevelId.CEMETERY, "fromHub");
+        gameWorld.loadLevel(LevelId.CEMETERY, FROM_HUB);
         gameWorld.getPlayer().setPosition(790f, 320f);
         gameWorld.update(new MovementIntent(0f, 0f), 0.016f);
         assertTrue(gameWorld.getInventory().hasKey(KeyId.CEMETERY_KEY));
 
         // Port
-        gameWorld.loadLevel(LevelId.PORT, "fromHub");
+        gameWorld.loadLevel(LevelId.PORT, FROM_HUB);
         gameWorld.getPlayer().setPosition(470f, 320f);
         gameWorld.update(new MovementIntent(0f, 0f), 0.016f);
         assertTrue(gameWorld.getInventory().hasKey(KeyId.PORT_KEY));
 
-        // Retour maison, porte cave en haut
-        gameWorld.loadLevel(LevelId.HOUSE, "start");
-        gameWorld.getPlayer().setPosition(470f, 502f);
+        // Retour maison, porte cave en bas
+        gameWorld.loadLevel(LevelId.HOUSE, START);
+        gameWorld.getPlayer().setPosition(470f, 62f);
         gameWorld.update(new MovementIntent(0f, 0f), 0.016f);
         assertEquals(LevelId.CELLAR, gameWorld.getCurrentLevel().getId());
     }

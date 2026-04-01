@@ -41,7 +41,7 @@ public final class HudRenderer {
         font.draw(spriteBatch, "Map : " + levelDisplay, 24f, viewport.getWorldHeight() - 20f);
 
         // Draw controls and position info
-        font.draw(spriteBatch, "Déplacement : WASD / flèches", 24f, viewport.getWorldHeight() - 48f);
+        font.draw(spriteBatch, "Déplacement : WASD / flèches | Interagir : E | Saut : Espace", 24f, viewport.getWorldHeight() - 48f);
         font.draw(spriteBatch, "Pos : (" + (int)gameWorld.getPlayer().getX() + ", " + (int)gameWorld.getPlayer().getY() + ")", 24f, viewport.getWorldHeight() - 76f);
         font.draw(spriteBatch, "Zones visitées : " + gameWorld.getVisitedLevelCount() + "/6", 24f, viewport.getWorldHeight() - 104f);
         font.draw(spriteBatch, "Clés : " + formatKeys(gameWorld), 24f, viewport.getWorldHeight() - 132f);

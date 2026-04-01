@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import fr.supdevinci.games.assets.GameAssets;
 import fr.supdevinci.games.config.ColorPalette;
 import fr.supdevinci.games.world.GameWorld;
+import fr.supdevinci.games.world.InteractableObject;
+import fr.supdevinci.games.world.InteractableType;
 import fr.supdevinci.games.world.KeyPickup;
 import fr.supdevinci.games.world.LevelDefinition;
 import fr.supdevinci.games.world.LevelId;
@@ -36,6 +38,7 @@ public final class WorldRenderer {
         drawThemedBackground(level);
         drawTransitions(level);
         drawObstacles(level);
+        drawInteractables(level, gameWorld);
         drawSpecialDoors(level, gameWorld);
         drawKeyPickups(level, gameWorld);
 
@@ -61,38 +64,41 @@ public final class WorldRenderer {
             return;
         }
 
-        // Porte cave visuelle : prend la même hitbox que la transition HOUSE -> CELLAR
-        for (TransitionZone transitionZone : level.getTransitionZones()) {
-            if (transitionZone.getTargetLevelId() != LevelId.CELLAR) {
-                continue;
-            }
-
-            boolean unlocked = transitionZone.getRequiredKeys().isEmpty()
-                || gameWorld.getInventory().hasAllKeys(transitionZone.getRequiredKeys());
-
-            Color doorBody = unlocked ? ColorPalette.DOOR_OPEN : ColorPalette.DOOR_LOCKED;
-            Color doorFrame = ColorPalette.DOOR_FRAME;
-
-            // Cadre
-            shapeRenderer.setColor(doorFrame);
-            shapeRenderer.rect(
-                transitionZone.getArea().x - 3f,
-                transitionZone.getArea().y - 3f,
-                transitionZone.getArea().width + 6f,
-                transitionZone.getArea().height + 6f
-            );
-
-            // Porte
-            shapeRenderer.setColor(doorBody);
-            shapeRenderer.rect(
-                transitionZone.getArea().x,
-                transitionZone.getArea().y,
-                transitionZone.getArea().width,
-                transitionZone.getArea().height
-            );
-
-            break;
+        TransitionZone cellarDoor = findCellarTransition(level);
+        if (cellarDoor == null) {
+            return;
         }
+
+        boolean unlocked = cellarDoor.getRequiredKeys().isEmpty()
+            || gameWorld.getInventory().hasAllKeys(cellarDoor.getRequiredKeys());
+
+        Color doorBody = unlocked ? ColorPalette.DOOR_OPEN : ColorPalette.DOOR_LOCKED;
+        Color doorFrame = ColorPalette.DOOR_FRAME;
+
+        shapeRenderer.setColor(doorFrame);
+        shapeRenderer.rect(
+            cellarDoor.getArea().x - 3f,
+            cellarDoor.getArea().y - 3f,
+            cellarDoor.getArea().width + 6f,
+            cellarDoor.getArea().height + 6f
+        );
+
+        shapeRenderer.setColor(doorBody);
+        shapeRenderer.rect(
+            cellarDoor.getArea().x,
+            cellarDoor.getArea().y,
+            cellarDoor.getArea().width,
+            cellarDoor.getArea().height
+        );
+    }
+
+    private TransitionZone findCellarTransition(LevelDefinition level) {
+        for (TransitionZone transitionZone : level.getTransitionZones()) {
+            if (transitionZone.getTargetLevelId() == LevelId.CELLAR) {
+                return transitionZone;
+            }
+        }
+        return null;
     }
 
     private void drawThemedBackground(LevelDefinition level) {
@@ -142,7 +148,11 @@ public final class WorldRenderer {
             shapeRenderer.setColor(Color.valueOf("233744"));
             shapeRenderer.rect(0f, 360f, level.getWidth(), 180f);
             shapeRenderer.setColor(Color.valueOf("8B6A45"));
-            shapeRenderer.rect(420f, 160f, 120f, 190f);
+            shapeRenderer.rect(420f, 160f, 120f, 160f);
+            shapeRenderer.setColor(ColorPalette.BROKEN_BRIDGE_PART);
+            shapeRenderer.rect(430f, 378f, 80f, 22f);
+            shapeRenderer.rect(530f, 430f, 70f, 22f);
+            shapeRenderer.rect(390f, 480f, 70f, 22f);
             return;
         }
 
@@ -157,6 +167,24 @@ public final class WorldRenderer {
         // Cellar / default
         shapeRenderer.setColor(level.getBackgroundColor());
         shapeRenderer.rect(0f, 0f, level.getWidth(), level.getHeight());
+    }
+
+    private void drawInteractables(LevelDefinition level, GameWorld gameWorld) {
+        for (InteractableObject interactableObject : level.getInteractableObjects()) {
+            boolean explored = gameWorld.isInteractableExplored(interactableObject);
+            if (interactableObject.getType() == InteractableType.BOOK) {
+                shapeRenderer.setColor(explored ? ColorPalette.BOOK_EXPLORED : ColorPalette.BOOK);
+            } else {
+                shapeRenderer.setColor(explored ? ColorPalette.GRAVE_EXPLORED : ColorPalette.GRAVE);
+            }
+
+            shapeRenderer.rect(
+                interactableObject.getArea().x,
+                interactableObject.getArea().y,
+                interactableObject.getArea().width,
+                interactableObject.getArea().height
+            );
+        }
     }
 
     private void drawTransitions(LevelDefinition level) {

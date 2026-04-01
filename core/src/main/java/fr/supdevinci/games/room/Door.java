@@ -23,30 +23,70 @@ public final class Door {
     /**
      * Creates an unlocked door (CLOSED state).
      */
-    public Door(String id, float x, float y, float width, float height, 
+    public Door(String id, float x, float y, float width, float height,
                 String label, String targetRoomId) {
-        this(id, x, y, width, height, label, targetRoomId, List.of(), DoorState.CLOSED);
+        this(builder(id, Geometry.of(x, y, width, height), label, targetRoomId));
     }
 
-    /**
-     * Creates a door with specific requirements.
-     * 
-     * @param id unique identifier
-     * @param x, y, width, height collision box
-     * @param label display name
-     * @param targetRoomId the room this door leads to
-     * @param requiredKeys list of keys needed to open
-     * @param initialState initial state (OPEN, CLOSED, or LOCKED)
-     */
-    public Door(String id, float x, float y, float width, float height,
-                String label, String targetRoomId, List<KeyId> requiredKeys,
-                DoorState initialState) {
-        this.id = Objects.requireNonNull(id);
-        this.area = new Rectangle(x, y, width, height);
-        this.label = Objects.requireNonNull(label);
-        this.targetRoomId = Objects.requireNonNull(targetRoomId);
-        this.requiredKeys = List.copyOf(requiredKeys);
-        this.state = Objects.requireNonNull(initialState);
+    public Door(Builder builder) {
+        this.id = Objects.requireNonNull(builder.id);
+        this.area = new Rectangle(builder.geometry.x, builder.geometry.y, builder.geometry.width, builder.geometry.height);
+        this.label = Objects.requireNonNull(builder.label);
+        this.targetRoomId = Objects.requireNonNull(builder.targetRoomId);
+        this.requiredKeys = List.copyOf(builder.requiredKeys);
+        this.state = Objects.requireNonNull(builder.initialState);
+    }
+
+    public static Builder builder(String id, Geometry geometry, String label, String targetRoomId) {
+        return new Builder(id, geometry, label, targetRoomId);
+    }
+
+    public static final class Builder {
+        private final String id;
+        private final Geometry geometry;
+        private final String label;
+        private final String targetRoomId;
+        private List<KeyId> requiredKeys = List.of();
+        private DoorState initialState = DoorState.CLOSED;
+
+        private Builder(String id, Geometry geometry, String label, String targetRoomId) {
+            this.id = id;
+            this.geometry = geometry;
+            this.label = label;
+            this.targetRoomId = targetRoomId;
+        }
+
+        public Builder requiredKeys(List<KeyId> keys) {
+            this.requiredKeys = List.copyOf(keys);
+            return this;
+        }
+
+        public Builder initialState(DoorState state) {
+            this.initialState = state;
+            return this;
+        }
+
+        public Door build() {
+            return new Door(this);
+        }
+    }
+
+    public static final class Geometry {
+        private final float x;
+        private final float y;
+        private final float width;
+        private final float height;
+
+        private Geometry(float x, float y, float width, float height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+
+        public static Geometry of(float x, float y, float width, float height) {
+            return new Geometry(x, y, width, height);
+        }
     }
 
     // Getters

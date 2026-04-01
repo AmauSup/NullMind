@@ -21,6 +21,92 @@ import java.util.Optional;
  * </p>
  */
 public final class LevelDefinition {
+    public static final class Size {
+        private final float width;
+        private final float height;
+
+        private Size(float width, float height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        public static Size of(float width, float height) {
+            return new Size(width, height);
+        }
+
+        public float width() {
+            return width;
+        }
+
+        public float height() {
+            return height;
+        }
+    }
+
+    public static final class Colors {
+        private final Color background;
+        private final Color accent;
+
+        private Colors(Color background, Color accent) {
+            this.background = background;
+            this.accent = accent;
+        }
+
+        public static Colors of(Color background, Color accent) {
+            return new Colors(background, accent);
+        }
+
+        public Color background() {
+            return background;
+        }
+
+        public Color accent() {
+            return accent;
+        }
+    }
+
+    public static final class FlatContent {
+        private final List<Obstacle> obstacles;
+        private final List<TransitionZone> transitionZones;
+        private final List<KeyPickup> keyPickups;
+        private final List<InteractableObject> interactableObjects;
+
+        private FlatContent(List<Obstacle> obstacles, List<TransitionZone> transitionZones,
+                            List<KeyPickup> keyPickups, List<InteractableObject> interactableObjects) {
+            this.obstacles = List.copyOf(obstacles);
+            this.transitionZones = List.copyOf(transitionZones);
+            this.keyPickups = List.copyOf(keyPickups);
+            this.interactableObjects = List.copyOf(interactableObjects);
+        }
+
+        public static FlatContent of(List<Obstacle> obstacles, List<TransitionZone> transitionZones, List<KeyPickup> keyPickups) {
+            return new FlatContent(obstacles, transitionZones, keyPickups, List.of());
+        }
+
+        public static FlatContent of(List<Obstacle> obstacles, List<TransitionZone> transitionZones,
+                                     List<KeyPickup> keyPickups, List<InteractableObject> interactableObjects) {
+            return new FlatContent(obstacles, transitionZones, keyPickups, interactableObjects);
+        }
+
+        public static FlatContent empty() {
+            return new FlatContent(List.of(), List.of(), List.of(), List.of());
+        }
+    }
+
+    public static final class InteriorContent {
+        private final Map<String, Room> rooms;
+        private final String currentRoomId;
+
+        private InteriorContent(Map<String, Room> rooms, String currentRoomId) {
+            this.rooms = Map.copyOf(rooms);
+            this.currentRoomId = currentRoomId;
+        }
+
+        public static InteriorContent of(Map<String, Room> rooms, String currentRoomId) {
+            return new InteriorContent(rooms, currentRoomId);
+        }
+    }
+
     private final LevelId id;
     private final float width;
     private final float height;
@@ -29,96 +115,58 @@ public final class LevelDefinition {
     private final List<Obstacle> obstacles;
     private final List<TransitionZone> transitionZones;
     private final List<KeyPickup> keyPickups;
+    private final List<InteractableObject> interactableObjects;
     private final Map<String, SpawnPoint> spawnPoints;
     private final String defaultSpawnId;
     private final Optional<Map<String, Room>> rooms;
     private final Optional<String> currentRoomId;
 
-    /**
-     * Creates a flat level definition (hub, exterior zones).
-     *
-     * @param id stable level identifier
-     * @param width world width
-     * @param height world height
-     * @param backgroundColor clear color used for the level
-     * @param accentColor secondary color used for rendering points of interest
-     * @param obstacles blocking rectangles
-     * @param transitionZones exits to other levels
-    * @param keyPickups collectible keys available in the level
-     * @param spawnPoints reusable spawn points indexed by id
-     * @param defaultSpawnId fallback spawn point id
-     */
-    public LevelDefinition(
+    public static LevelDefinition flat(
         LevelId id,
-        float width,
-        float height,
-        Color backgroundColor,
-        Color accentColor,
-        List<Obstacle> obstacles,
-        List<TransitionZone> transitionZones,
-        List<KeyPickup> keyPickups,
+        Size size,
+        Colors colors,
+        FlatContent flatContent,
         Map<String, SpawnPoint> spawnPoints,
         String defaultSpawnId
     ) {
-        this(id, width, height, backgroundColor, accentColor, obstacles, transitionZones, keyPickups, spawnPoints, defaultSpawnId, null, null);
+        return new LevelDefinition(id, size, colors, spawnPoints, defaultSpawnId, flatContent, null);
     }
 
-    /**
-     * Creates an interior level definition (house with multiple rooms).
-     *
-     * @param id stable level identifier
-     * @param width world width (room viewport size)
-     * @param height world height (room viewport size)
-     * @param backgroundColor fallback clear color
-     * @param accentColor secondary color
-     * @param rooms map of room id to room definition
-     * @param spawnPoints reusable spawn points for room entry points
-     * @param defaultSpawnId fallback spawn point id
-     * @param currentRoomId the initial room to load
-     */
-    public LevelDefinition(
+    public static LevelDefinition interior(
         LevelId id,
-        float width,
-        float height,
-        Color backgroundColor,
-        Color accentColor,
-        Map<String, Room> rooms,
+        Size size,
+        Colors colors,
+        InteriorContent interiorContent,
         Map<String, SpawnPoint> spawnPoints,
-        String defaultSpawnId,
-        String currentRoomId
+        String defaultSpawnId
     ) {
-        this(id, width, height, backgroundColor, accentColor, List.of(), List.of(), List.of(), spawnPoints, defaultSpawnId, rooms, currentRoomId);
+        return new LevelDefinition(id, size, colors, spawnPoints, defaultSpawnId, FlatContent.empty(), interiorContent);
     }
 
-    /**
-     * Private constructor for both flat and interior levels.
-     */
     private LevelDefinition(
         LevelId id,
-        float width,
-        float height,
-        Color backgroundColor,
-        Color accentColor,
-        List<Obstacle> obstacles,
-        List<TransitionZone> transitionZones,
-        List<KeyPickup> keyPickups,
+        Size size,
+        Colors colors,
         Map<String, SpawnPoint> spawnPoints,
         String defaultSpawnId,
-        Map<String, Room> roomsMap,
-        String currentRoomIdValue
+        FlatContent flatContent,
+        InteriorContent interiorContent
     ) {
         this.id = id;
-        this.width = width;
-        this.height = height;
-        this.backgroundColor = new Color(backgroundColor);
-        this.accentColor = new Color(accentColor);
-        this.obstacles = List.copyOf(obstacles);
-        this.transitionZones = List.copyOf(transitionZones);
-        this.keyPickups = List.copyOf(keyPickups);
+        this.width = size.width();
+        this.height = size.height();
+        this.backgroundColor = new Color(colors.background());
+        this.accentColor = new Color(colors.accent());
+        this.obstacles = List.copyOf(flatContent.obstacles);
+        this.transitionZones = List.copyOf(flatContent.transitionZones);
+        this.keyPickups = List.copyOf(flatContent.keyPickups);
+        this.interactableObjects = List.copyOf(flatContent.interactableObjects);
         this.spawnPoints = Collections.unmodifiableMap(new LinkedHashMap<>(spawnPoints));
         this.defaultSpawnId = defaultSpawnId;
-        this.rooms = roomsMap != null ? Optional.of(Map.copyOf(roomsMap)) : Optional.empty();
-        this.currentRoomId = currentRoomIdValue != null ? Optional.of(currentRoomIdValue) : Optional.empty();
+        this.rooms = interiorContent != null ? Optional.of(interiorContent.rooms) : Optional.empty();
+        this.currentRoomId = interiorContent != null && interiorContent.currentRoomId != null
+            ? Optional.of(interiorContent.currentRoomId)
+            : Optional.empty();
     }
 
     public LevelId getId() {
@@ -155,6 +203,10 @@ public final class LevelDefinition {
 
     public List<KeyPickup> getKeyPickups() {
         return keyPickups;
+    }
+
+    public List<InteractableObject> getInteractableObjects() {
+        return interactableObjects;
     }
 
     /**

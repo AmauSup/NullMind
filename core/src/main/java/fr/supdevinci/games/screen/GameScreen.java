@@ -48,7 +48,12 @@ public final class GameScreen extends ScreenAdapter {
             return;
         }
 
-        gameWorld.update(inputController.readMovement(), delta);
+        gameWorld.update(
+            inputController.readMovement(),
+            delta,
+            inputController.isInteractPressed(),
+            inputController.isJumpPressed()
+        );
 
         Color backgroundColor = gameWorld.getCurrentLevel().getBackgroundColor();
         ScreenUtils.clear(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1f);

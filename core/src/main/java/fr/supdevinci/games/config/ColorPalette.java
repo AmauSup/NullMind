@@ -36,6 +36,15 @@ public final class ColorPalette {
     public static final Color DOOR_FRAME = Color.valueOf("654321");          // Brown
     public static final Color DOOR_HANDLE = Color.valueOf("FFD700");         // Gold
 
+    // Interactables
+    public static final Color BOOK = Color.valueOf("8B5A2B");
+    public static final Color BOOK_EXPLORED = Color.valueOf("5E4630");
+    public static final Color GRAVE = Color.valueOf("8A8F95");
+    public static final Color GRAVE_EXPLORED = Color.valueOf("555B61");
+
+    // Port jump parts
+    public static final Color BROKEN_BRIDGE_PART = Color.valueOf("9B7653");
+
     // UI / Info
     public static final Color TRANSITION_ZONE = Color.valueOf("76ABAE");     // Teal (existing)
     public static final Color OBSTACLE = Color.valueOf("000000");            // Black

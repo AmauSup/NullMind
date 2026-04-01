@@ -33,6 +33,14 @@ public final class GameInputController {
         return new MovementIntent(horizontal, vertical);
     }
 
+    public boolean isInteractPressed() {
+        return Gdx.input.isKeyJustPressed(Input.Keys.E);
+    }
+
+    public boolean isJumpPressed() {
+        return Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
+    }
+
     private boolean isPressed(int primaryKey, int secondaryKey) {
         return Gdx.input.isKeyPressed(primaryKey) || Gdx.input.isKeyPressed(secondaryKey);
     }

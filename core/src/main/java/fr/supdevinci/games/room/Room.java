@@ -28,19 +28,64 @@ public final class Room {
     private final List<KeyPickup> keyPickups;
     private final Rectangle spawnArea;
 
-    public Room(String id, String displayName, String description, Color baseColor,
-                float x, float y, float width, float height,
-                List<Obstacle> obstacles, List<Door> doors,
-                List<KeyPickup> keyPickups, Rectangle spawnArea) {
-        this.id = Objects.requireNonNull(id);
-        this.displayName = Objects.requireNonNull(displayName);
-        this.description = Objects.requireNonNull(description);
-        this.baseColor = Objects.requireNonNull(baseColor);
-        this.bounds = new Rectangle(x, y, width, height);
-        this.obstacles = List.copyOf(obstacles);
-        this.doors = List.copyOf(doors);
-        this.keyPickups = List.copyOf(keyPickups);
-        this.spawnArea = Objects.requireNonNull(spawnArea);
+    public Room(Builder builder) {
+        this.id = Objects.requireNonNull(builder.id);
+        this.displayName = Objects.requireNonNull(builder.displayName);
+        this.description = Objects.requireNonNull(builder.description);
+        this.baseColor = Objects.requireNonNull(builder.baseColor);
+        this.bounds = new Rectangle(builder.bounds.x, builder.bounds.y, builder.bounds.width, builder.bounds.height);
+        this.obstacles = List.copyOf(builder.obstacles);
+        this.doors = List.copyOf(builder.doors);
+        this.keyPickups = List.copyOf(builder.keyPickups);
+        this.spawnArea = new Rectangle(builder.spawnArea);
+    }
+
+    public static Builder builder(String id, String displayName, String description, Color baseColor, Rectangle bounds) {
+        return new Builder(id, displayName, description, baseColor, bounds);
+    }
+
+    public static final class Builder {
+        private final String id;
+        private final String displayName;
+        private final String description;
+        private final Color baseColor;
+        private final Rectangle bounds;
+        private List<Obstacle> obstacles = List.of();
+        private List<Door> doors = List.of();
+        private List<KeyPickup> keyPickups = List.of();
+        private Rectangle spawnArea = new Rectangle();
+
+        private Builder(String id, String displayName, String description, Color baseColor, Rectangle bounds) {
+            this.id = id;
+            this.displayName = displayName;
+            this.description = description;
+            this.baseColor = baseColor;
+            this.bounds = new Rectangle(bounds);
+        }
+
+        public Builder obstacles(List<Obstacle> value) {
+            this.obstacles = List.copyOf(value);
+            return this;
+        }
+
+        public Builder doors(List<Door> value) {
+            this.doors = List.copyOf(value);
+            return this;
+        }
+
+        public Builder keyPickups(List<KeyPickup> value) {
+            this.keyPickups = List.copyOf(value);
+            return this;
+        }
+
+        public Builder spawnArea(Rectangle value) {
+            this.spawnArea = new Rectangle(value);
+            return this;
+        }
+
+        public Room build() {
+            return new Room(this);
+        }
     }
 
     // Getters
