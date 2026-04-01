@@ -1,0 +1,34 @@
+\chapter{Game }
+\hypertarget{md__r_e_a_d_m_e}{}\label{md__r_e_a_d_m_e}\index{Game@{Game}}
+\label{md__r_e_a_d_m_e_autotoc_md0}%
+\Hypertarget{md__r_e_a_d_m_e_autotoc_md0}%
+
+
+A \href{https://libgdx.com/}{\texttt{lib\+GDX}} project generated with \href{https://github.com/libgdx/gdx-liftoff}{\texttt{gdx-\/liftoff}}.
+
+This project was generated with a template including simple application launchers and an {\ttfamily Application\+Adapter} extension that draws a simple GUI on the screen.\hypertarget{md__r_e_a_d_m_e_autotoc_md1}{}\doxysection{\texorpdfstring{Platforms}{Platforms}}\label{md__r_e_a_d_m_e_autotoc_md1}
+
+\begin{DoxyItemize}
+\item {\ttfamily core}:\+ Main module with the application logic shared by all platforms.
+\item {\ttfamily lwjgl3}:\+ Primary desktop platform using LWJGL3; was called \textquotesingle{}desktop\textquotesingle{} in older docs.
+\end{DoxyItemize}\hypertarget{md__r_e_a_d_m_e_autotoc_md2}{}\doxysection{\texorpdfstring{Gradle}{Gradle}}\label{md__r_e_a_d_m_e_autotoc_md2}
+This project uses \href{https://gradle.org/}{\texttt{Gradle}} to manage dependencies. The Gradle wrapper was included, so you can run Gradle tasks using {\ttfamily gradlew.\+bat} or {\ttfamily ./\+gradlew} commands. Useful Gradle tasks and flags:\+
+
+
+\begin{DoxyItemize}
+\item {\ttfamily -\/-\/continue}:\+ when using this flag, errors will not stop the tasks from running.
+\item {\ttfamily -\/-\/daemon}:\+ thanks to this flag, Gradle daemon will be used to run chosen tasks.
+\item {\ttfamily -\/-\/offline}:\+ when using this flag, cached dependency archives will be used.
+\item {\ttfamily -\/-\/refresh-\/dependencies}:\+ this flag forces validation of all dependencies. Useful for snapshot versions.
+\item {\ttfamily build}:\+ builds sources and archives of every project.
+\item {\ttfamily clean\+Eclipse}:\+ removes Eclipse project data.
+\item {\ttfamily clean\+Idea}:\+ removes IntelliJ project data.
+\item {\ttfamily clean}:\+ removes {\ttfamily build} folders, which store compiled classes and built archives.
+\item {\ttfamily eclipse}:\+ generates Eclipse project data.
+\item {\ttfamily idea}:\+ generates IntelliJ project data.
+\item {\ttfamily lwjgl3:\+jar}:\+ builds application\textquotesingle{}s runnable jar, which can be found at {\ttfamily lwjgl3/\+build/\+libs}.
+\item {\ttfamily lwjgl3:\+run}:\+ starts the application.
+\item {\ttfamily test}:\+ runs unit tests (if any).
+\end{DoxyItemize}
+
+Note that most tasks that are not specific to a single project can be run with {\ttfamily name:\+} prefix, where the {\ttfamily name} should be replaced with the ID of a specific project. For example, {\ttfamily core:\+clean} removes {\ttfamily build} folder only from the {\ttfamily core} project. 
