@@ -153,25 +153,24 @@ public final class GameScreen extends ScreenAdapter {
      * @param delta frame delta time in seconds
      */
     private void updateCamera(float delta) {
-        float targetX = gameWorld.getPlayer().getX() + (gameWorld.getPlayer().getWidth() / 2f);
-        float targetY = gameWorld.getPlayer().getY() + (gameWorld.getPlayer().getHeight() / 2f);
+        var player = gameWorld.getPlayer();
+        var level = gameWorld.getCurrentLevel();
+
+        float targetX = player.getX() + (player.getWidth() / 2f);
+        float targetY = player.getY() + (player.getHeight() / 2f);
 
         float minX = viewport.getWorldWidth() / 2f;
-        float maxX = gameWorld.getCurrentLevel().getWidth() - minX;
+        float maxX = level.getWidth() - minX;
         float minY = viewport.getWorldHeight() / 2f;
-        float maxY = gameWorld.getCurrentLevel().getHeight() - minY;
+        float maxY = level.getHeight() - minY;
 
-        if (maxX < minX) {
-            targetX = gameWorld.getCurrentLevel().getWidth() / 2f;
-        } else {
-            targetX = MathUtils.clamp(targetX, minX, maxX);
-        }
+        targetX = maxX < minX
+            ? level.getWidth() / 2f
+            : MathUtils.clamp(targetX, minX, maxX);
 
-        if (maxY < minY) {
-            targetY = gameWorld.getCurrentLevel().getHeight() / 2f;
-        } else {
-            targetY = MathUtils.clamp(targetY, minY, maxY);
-        }
+        targetY = maxY < minY
+            ? level.getHeight() / 2f
+            : MathUtils.clamp(targetY, minY, maxY);
 
         float alpha = Math.min(1f, delta * GameConstants.CAMERA_LERP_SPEED);
         camera.position.x = MathUtils.lerp(camera.position.x, targetX, alpha);
