@@ -169,9 +169,6 @@ public final class GameWorld {
             return;
         }
 
-        if (screamManager.isActive()) {
-            return;
-        }
 
         screamManager.tryActivate();
         if (screamManager.isActive()) {
