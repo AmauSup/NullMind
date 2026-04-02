@@ -9,6 +9,12 @@ public final class MovementIntent {
     private final float horizontal;
     private final float vertical;
 
+    /**
+     * Creates an immutable movement request.
+     *
+     * @param horizontal requested horizontal axis value
+     * @param vertical requested vertical axis value
+     */
     public MovementIntent(float horizontal, float vertical) {
         this.horizontal = horizontal;
         this.vertical = vertical;

@@ -14,6 +14,9 @@ public final class GameConfig {
     public static final float PLAYER_HEIGHT = 28f;
     public static final float PLAYER_SPEED = 220f;
 
+    /**
+     * Prevents instantiation of utility class.
+     */
     private GameConfig() {
     }
 }

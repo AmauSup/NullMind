@@ -19,6 +19,9 @@ public class Main extends Game {
     private GameAssets assets;
     private GameContext context;
 
+    /**
+     * Initializes shared resources and opens the title screen.
+     */
     @Override
     public void create() {
         assets = new GameAssets();
@@ -37,14 +40,23 @@ public class Main extends Game {
         replaceScreen(new GameScreen(context));
     }
 
+    /**
+     * Disposes the current screen and shared game assets.
+     */
     @Override
     public void dispose() {
         super.dispose();
+    
         if (assets != null) {
             assets.dispose();
         }
     }
 
+    /**
+     * Replaces the active screen and disposes the previous one if present.
+     *
+     * @param nextScreen screen to activate
+     */
     private void replaceScreen(Screen nextScreen) {
         Screen previousScreen = getScreen();
         setScreen(nextScreen);

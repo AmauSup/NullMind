@@ -14,6 +14,9 @@ import java.util.Map;
  * This project currently uses flat levels only.
  */
 public final class LevelDefinition {
+    /**
+     * Immutable level dimensions.
+     */
     public static final class Size {
         private final float width;
         private final float height;
@@ -23,19 +26,39 @@ public final class LevelDefinition {
             this.height = height;
         }
 
+        /**
+         * Creates a size object.
+         *
+         * @param width level width
+         * @param height level height
+         * @return size value object
+         */
         public static Size of(float width, float height) {
             return new Size(width, height);
         }
 
+        /**
+         * Returns width.
+         *
+         * @return level width
+         */
         public float width() {
             return width;
         }
 
+        /**
+         * Returns height.
+         *
+         * @return level height
+         */
         public float height() {
             return height;
         }
     }
 
+    /**
+     * Immutable color pair for a level.
+     */
     public static final class Colors {
         private final Color background;
         private final Color accent;
@@ -45,19 +68,39 @@ public final class LevelDefinition {
             this.accent = accent;
         }
 
+        /**
+         * Creates a color configuration.
+         *
+         * @param background background color
+         * @param accent accent color
+         * @return colors value object
+         */
         public static Colors of(Color background, Color accent) {
             return new Colors(background, accent);
         }
 
+        /**
+         * Returns background color.
+         *
+         * @return background color
+         */
         public Color background() {
             return background;
         }
 
+        /**
+         * Returns accent color.
+         *
+         * @return accent color
+         */
         public Color accent() {
             return accent;
         }
     }
 
+    /**
+     * Immutable content container for flat levels.
+     */
     public static final class FlatContent {
         private final List<Obstacle> obstacles;
         private final List<TransitionZone> transitionZones;
@@ -72,10 +115,27 @@ public final class LevelDefinition {
             this.interactableObjects = List.copyOf(interactableObjects);
         }
 
+        /**
+         * Creates flat content without interactables.
+         *
+         * @param obstacles blocking obstacles
+         * @param transitionZones transition zones
+         * @param keyPickups key pickups
+         * @return flat content object
+         */
         public static FlatContent of(List<Obstacle> obstacles, List<TransitionZone> transitionZones, List<KeyPickup> keyPickups) {
             return new FlatContent(obstacles, transitionZones, keyPickups, List.of());
         }
 
+        /**
+         * Creates flat content with interactables.
+         *
+         * @param obstacles blocking obstacles
+         * @param transitionZones transition zones
+         * @param keyPickups key pickups
+         * @param interactableObjects interactable objects
+         * @return flat content object
+         */
         public static FlatContent of(List<Obstacle> obstacles, List<TransitionZone> transitionZones,
                                      List<KeyPickup> keyPickups, List<InteractableObject> interactableObjects) {
             return new FlatContent(obstacles, transitionZones, keyPickups, interactableObjects);
@@ -94,6 +154,17 @@ public final class LevelDefinition {
     private final Map<String, SpawnPoint> spawnPoints;
     private final String defaultSpawnId;
 
+    /**
+     * Builds an immutable flat level definition.
+     *
+     * @param id level id
+     * @param size level size
+     * @param colors level colors
+     * @param flatContent flat level content
+     * @param spawnPoints available spawn points
+     * @param defaultSpawnId fallback spawn id
+     * @return immutable level definition
+     */
     public static LevelDefinition flat(
         LevelId id,
         Size size,
@@ -126,42 +197,92 @@ public final class LevelDefinition {
         this.defaultSpawnId = defaultSpawnId;
     }
 
+    /**
+     * Returns level id.
+     *
+     * @return level id
+     */
     public LevelId getId() {
         return id;
     }
 
+    /**
+     * Returns localized level display name.
+     *
+     * @return level display name
+     */
     public String getDisplayName() {
         return id.getDisplayName();
     }
 
+    /**
+     * Returns level width.
+     *
+     * @return width
+     */
     public float getWidth() {
         return width;
     }
 
+    /**
+     * Returns level height.
+     *
+     * @return height
+     */
     public float getHeight() {
         return height;
     }
 
+    /**
+     * Returns background color.
+     *
+     * @return background color
+     */
     public Color getBackgroundColor() {
         return backgroundColor;
     }
 
+    /**
+     * Returns accent color.
+     *
+     * @return accent color
+     */
     public Color getAccentColor() {
         return accentColor;
     }
 
+    /**
+     * Returns level obstacles.
+     *
+     * @return immutable obstacle list
+     */
     public List<Obstacle> getObstacles() {
         return obstacles;
     }
 
+    /**
+     * Returns transition zones.
+     *
+     * @return immutable transition list
+     */
     public List<TransitionZone> getTransitionZones() {
         return transitionZones;
     }
 
+    /**
+     * Returns key pickups.
+     *
+     * @return immutable key pickup list
+     */
     public List<KeyPickup> getKeyPickups() {
         return keyPickups;
     }
 
+    /**
+     * Returns interactable objects.
+     *
+     * @return immutable interactable list
+     */
     public List<InteractableObject> getInteractableObjects() {
         return interactableObjects;
     }

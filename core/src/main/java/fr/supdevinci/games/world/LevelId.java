@@ -17,6 +17,11 @@ public enum LevelId {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the localized display name for this level.
+     *
+     * @return level display name
+     */
     public String getDisplayName() {
         return displayName;
     }

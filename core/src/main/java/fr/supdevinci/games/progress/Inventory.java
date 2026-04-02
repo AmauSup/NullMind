@@ -12,6 +12,9 @@ public final class Inventory {
     private String cachedFormattedKeys;
     private boolean cacheDirty;
 
+    /**
+     * Creates an empty inventory.
+     */
     public Inventory() {
         this.keys = EnumSet.noneOf(KeyId.class);
         this.cachedFormattedKeys = "";
@@ -41,8 +44,10 @@ public final class Inventory {
     }
 
     /**
-     * @param required les clés dont on veut vérifier la présence
-     * @return true si l'inventaire contient TOUTES les clés demandées
+     * Checks whether all required keys are present.
+     *
+     * @param required set of keys required by a lock or transition
+     * @return {@code true} when all required keys are owned
      */
     public boolean hasAllKeys(java.util.Collection<KeyId> required) {
         return keys.containsAll(required);
@@ -55,10 +60,20 @@ public final class Inventory {
         return Set.copyOf(keys);
     }
 
+    /**
+     * Returns how many keys are currently owned.
+     *
+     * @return collected key count
+     */
     public int getKeyCount() {
         return keys.size();
     }
 
+    /**
+     * Returns collected keys as a comma-separated display string.
+     *
+     * @return formatted key display names, or empty string when none are owned
+     */
     public String getFormattedKeys() {
         if (keys.isEmpty()) {
             return "";

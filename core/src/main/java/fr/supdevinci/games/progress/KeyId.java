@@ -15,6 +15,11 @@ public enum KeyId {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the localized display name shown in the HUD.
+     *
+     * @return human-readable key name
+     */
     public String getDisplayName() {
         return displayName;
     }

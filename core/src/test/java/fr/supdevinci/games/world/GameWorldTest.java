@@ -15,7 +15,7 @@ class GameWorldTest {
 
         gameWorld.loadLevel(LevelId.HUB, "start");
         gameWorld.getPlayer().setPosition(460f, 122f);
-        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false, false);
+        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false);
 
         assertEquals(LevelId.HOUSE, gameWorld.getCurrentLevel().getId());
         assertEquals(470f, gameWorld.getPlayer().getX());
@@ -29,7 +29,7 @@ class GameWorldTest {
         gameWorld.loadLevel(LevelId.LIBRARY, "fromHub");
         // Library key is hidden in book_3 and requires interaction (E).
         gameWorld.getPlayer().setPosition(370f, 220f);
-        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, true, false);
+        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, true);
 
         assertTrue(gameWorld.getInventory().hasKey(KeyId.LIBRARY_KEY));
     }

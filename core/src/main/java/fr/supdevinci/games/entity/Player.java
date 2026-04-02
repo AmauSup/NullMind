@@ -26,18 +26,38 @@ public final class Player {
         this.height = height;
     }
 
+    /**
+     * Returns the player's x coordinate.
+     *
+     * @return world x position
+     */
     public float getX() {
         return x;
     }
 
+    /**
+     * Returns the player's y coordinate.
+     *
+     * @return world y position
+     */
     public float getY() {
         return y;
     }
 
+    /**
+     * Returns the collision width.
+     *
+     * @return player width
+     */
     public float getWidth() {
         return width;
     }
 
+    /**
+     * Returns the collision height.
+     *
+     * @return player height
+     */
     public float getHeight() {
         return height;
     }

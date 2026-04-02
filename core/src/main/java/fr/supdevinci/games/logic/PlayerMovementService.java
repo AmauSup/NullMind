@@ -37,28 +37,66 @@ public final class PlayerMovementService implements MovementService {
 
         Vector2 direction = movementIntent.toVector().nor().scl(speed * delta);
 
-        Rectangle xCandidate = new Rectangle(nextBounds);
-        xCandidate.x += direction.x;
-        clampToWorld(xCandidate, worldBounds);
-        if (!isBlocked(xCandidate, obstacles)) {
-            nextBounds.x = xCandidate.x;
-        }
-
-        Rectangle yCandidate = new Rectangle(nextBounds);
-        yCandidate.y += direction.y;
-        clampToWorld(yCandidate, worldBounds);
-        if (!isBlocked(yCandidate, obstacles)) {
-            nextBounds.y = yCandidate.y;
-        }
+        resolveHorizontalMovement(nextBounds, direction.x, worldBounds, obstacles);
+        resolveVerticalMovement(nextBounds, direction.y, worldBounds, obstacles);
 
         return nextBounds;
     }
 
+    /**
+     * Resolves movement on horizontal axis with world clamp and obstacle checks.
+     *
+     * @param nextBounds mutable destination bounds
+     * @param deltaX horizontal movement delta
+     * @param worldBounds playable world bounds
+     * @param obstacles collision obstacles
+     */
+    private void resolveHorizontalMovement(Rectangle nextBounds, float deltaX, Rectangle worldBounds,
+                                           List<Obstacle> obstacles) {
+        Rectangle candidate = new Rectangle(nextBounds);
+        candidate.x += deltaX;
+        clampToWorld(candidate, worldBounds);
+        if (!isBlocked(candidate, obstacles)) {
+            nextBounds.x = candidate.x;
+        }
+    }
+
+    /**
+     * Resolves movement on vertical axis with world clamp and obstacle checks.
+     *
+     * @param nextBounds mutable destination bounds
+     * @param deltaY vertical movement delta
+     * @param worldBounds playable world bounds
+     * @param obstacles collision obstacles
+     */
+    private void resolveVerticalMovement(Rectangle nextBounds, float deltaY, Rectangle worldBounds,
+                                         List<Obstacle> obstacles) {
+        Rectangle candidate = new Rectangle(nextBounds);
+        candidate.y += deltaY;
+        clampToWorld(candidate, worldBounds);
+        if (!isBlocked(candidate, obstacles)) {
+            nextBounds.y = candidate.y;
+        }
+    }
+
+    /**
+     * Clamps bounds so they stay inside world bounds.
+     *
+     * @param bounds bounds to clamp
+     * @param worldBounds playable world bounds
+     */
     private void clampToWorld(Rectangle bounds, Rectangle worldBounds) {
         bounds.x = MathUtils.clamp(bounds.x, worldBounds.x, worldBounds.x + worldBounds.width - bounds.width);
         bounds.y = MathUtils.clamp(bounds.y, worldBounds.y, worldBounds.y + worldBounds.height - bounds.height);
     }
 
+    /**
+     * Checks if candidate bounds overlap any obstacle.
+     *
+     * @param candidate candidate bounds
+     * @param obstacles collision obstacles
+     * @return {@code true} when blocked
+     */
     private boolean isBlocked(Rectangle candidate, List<Obstacle> obstacles) {
         for (Obstacle obstacle : obstacles) {
             if (obstacle.getBounds().overlaps(candidate)) {

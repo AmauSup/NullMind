@@ -39,8 +39,8 @@ public final class ColorPalette {
     public static final Color GRAVE = Color.valueOf("8A8F95");
     public static final Color GRAVE_EXPLORED = Color.valueOf("555B61");
 
-    // Port jump parts
-    public static final Color BROKEN_BRIDGE_PART = Color.valueOf("9B7653");
+    // Port bridge parts
+    public static final Color BRIDGE_DECK = Color.valueOf("8B6940");  // Wooden bridge planks
 
     // Player / pickups
     public static final Color PLAYER = Color.valueOf("FFD166");
@@ -65,6 +65,9 @@ public final class ColorPalette {
     public static final Color OBSTACLE_HOUSE = Color.valueOf("2B1E17");
     public static final Color OBSTACLE_DEFAULT = new Color(0f, 0f, 0f, 0.4f);
 
+    /**
+     * Prevents instantiation of utility class.
+     */
     private ColorPalette() {
         // Utility class
     }

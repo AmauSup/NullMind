@@ -22,6 +22,11 @@ public final class TitleScreen extends ScreenAdapter {
     private final OrthographicCamera camera;
     private final HudRenderer hudRenderer;
 
+    /**
+     * Creates the title screen and initializes its camera, viewport and HUD renderer.
+     *
+     * @param context shared game context
+     */
     public TitleScreen(GameContext context) {
         this.context = context;
         this.camera = new OrthographicCamera();
@@ -29,6 +34,11 @@ public final class TitleScreen extends ScreenAdapter {
         this.hudRenderer = new HudRenderer(context.getAssets());
     }
 
+    /**
+     * Renders the title view and handles start input.
+     *
+     * @param delta time elapsed since last frame, in seconds
+     */
     @Override
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
@@ -42,6 +52,12 @@ public final class TitleScreen extends ScreenAdapter {
         hudRenderer.renderCenteredText(GameConstants.TITLE_SCREEN_TEXT, viewport);
     }
 
+    /**
+     * Updates the viewport dimensions after window resize.
+     *
+     * @param width new window width
+     * @param height new window height
+     */
     @Override
     public void resize(int width, int height) {
         if (width > 0 && height > 0) {

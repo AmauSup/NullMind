@@ -3,53 +3,58 @@ package fr.supdevinci.games.world;
 import fr.supdevinci.games.config.GameConstants;
 import fr.supdevinci.games.logic.MovementIntent;
 import fr.supdevinci.games.logic.PlayerMovementService;
+import fr.supdevinci.games.progress.KeyId;
+import fr.supdevinci.games.world.screamer.ScreamerManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Tests the port level mechanics with the new bridge layout.
+ *
+ * <p>The port key is located on the bridge (y ≈ 422–448) which is accessible
+ * from the dock via lateral approach corridors (x=0-120 and x=840-960).</p>
+ */
 class PortMechanicsTest {
     private GameWorld gameWorld;
 
     @BeforeEach
     void setUp() {
-        gameWorld = new GameWorld(LevelCatalog.createDefault(), new PlayerMovementService());
-        gameWorld.loadLevel(LevelId.PORT, "fromHub");
+        // Never-firing screamer trigger: deterministic tests
+        ScreamerManager neverScream = new ScreamerManager(() -> false, 3f);
+        gameWorld = new GameWorld(LevelCatalog.createDefault(), new PlayerMovementService(), neverScream);
+        gameWorld.loadLevel(LevelId.PORT, GameConstants.SPAWN_FROM_HUB);
     }
 
     @Test
-    void shouldJumpFromStartZoneToFirstFloatingPart() {
-        gameWorld.getPlayer().setPosition(470f, 340f);
+    void shouldCollectPortKeyWhenStandingOnPickup() {
+        // The port key pickup is at (465, 422, 26, 26) — teleport player onto it
+        gameWorld.getPlayer().setPosition(465f, 422f);
 
-        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false, true);
+        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false);
 
-        assertEquals(GameConstants.MSG_JUMP_SUCCESS, gameWorld.getLastStatusMessage());
-        assertEquals(456f, gameWorld.getPlayer().getX(), 0.001f);
-        assertEquals(375f, gameWorld.getPlayer().getY(), 0.001f);
+        assertTrue(gameWorld.getInventory().hasKey(KeyId.PORT_KEY),
+            "Port key should be auto-collected by stepping on the pickup");
     }
 
     @Test
-    void shouldRespawnToPortEntryWhenFallingInWater() {
-        gameWorld.getPlayer().setPosition(500f, 400f);
+    void shouldRemainInPortWhenStandingInDockArea() {
+        gameWorld.getPlayer().setPosition(470f, 90f);
 
-        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false, false);
+        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false);
 
         assertEquals(LevelId.PORT, gameWorld.getCurrentLevel().getId());
-        assertEquals(470f, gameWorld.getPlayer().getX(), 0.001f);
-        assertEquals(90f, gameWorld.getPlayer().getY(), 0.001f);
-        assertEquals(GameConstants.MSG_FELL_IN_WATER, gameWorld.getLastStatusMessage());
     }
 
     @Test
-    void shouldStayInPlaceWhenStandingOnFloatingPart() {
-        gameWorld.getPlayer().setPosition(456f, 375f);
+    void shouldTransitionToHubWhenWalkingOnExitZone() {
+        // Hub exit transition is at (440, 30, 80, 24)
+        gameWorld.getPlayer().setPosition(450f, 30f);
 
-        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false, false);
+        gameWorld.update(new MovementIntent(0f, 0f), 0.016f, false);
 
-        assertEquals(LevelId.PORT, gameWorld.getCurrentLevel().getId());
-        assertEquals(456f, gameWorld.getPlayer().getX(), 0.001f);
-        assertEquals(375f, gameWorld.getPlayer().getY(), 0.001f);
-        assertTrue(!GameConstants.MSG_FELL_IN_WATER.equals(gameWorld.getLastStatusMessage()));
+        assertEquals(LevelId.HUB, gameWorld.getCurrentLevel().getId());
     }
 }
