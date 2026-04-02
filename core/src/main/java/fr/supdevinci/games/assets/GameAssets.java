@@ -31,6 +31,8 @@ public final class GameAssets implements Disposable {
     private final Texture houseFloorTexture;
     /** Nullable — cemetery top area texture (chapel/tomb wall), drawn in cemetery upper zone. */
     private final Texture cemeteryTopTexture;
+    /** Nullable — key pickup texture used when available instead of plain colored rectangles. */
+    private final Texture keyPickupTexture;
 
     /**
      * Initializes all rendering resources and attempts to load optional textures.
@@ -73,6 +75,12 @@ public final class GameAssets implements Disposable {
             "texture/cimetiereTop.png",
             "texture/church_top.png",
             "texture/chapelle.png"
+        );
+        keyPickupTexture = tryLoadFirstTexture(
+            "texture/Clef.png",
+            "texture/clef.png",
+            "texture/key.png",
+            "ui/key.png"
         );
     }
 
@@ -180,6 +188,15 @@ public final class GameAssets implements Disposable {
     }
 
     /**
+     * Returns the key pickup texture if loaded.
+     *
+     * @return key pickup {@link Texture}, or {@code null} when not available
+     */
+    public Texture getKeyPickupTextureOrNull() {
+        return keyPickupTexture;
+    }
+
+    /**
      * Disposes all allocated graphics resources owned by this asset container.
      */
     @Override
@@ -192,6 +209,7 @@ public final class GameAssets implements Disposable {
         disposeTexture(screamerTexture);
         disposeTexture(houseFloorTexture);
         disposeTexture(cemeteryTopTexture);
+        disposeTexture(keyPickupTexture);
     }
 
     /**

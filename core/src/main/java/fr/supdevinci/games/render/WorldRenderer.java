@@ -37,6 +37,7 @@ public final class WorldRenderer {
     private final Texture cemeteryTopTexture;
     private final Texture graveTexture;
     private final Texture graveExploredTexture;
+    private final Texture keyPickupTexture;
     private final EnumMap<LevelId, Consumer<LevelDefinition>> backgroundRenderers;
     private final EnumMap<LevelId, Color> obstacleColors;
 
@@ -52,6 +53,7 @@ public final class WorldRenderer {
         this.cemeteryTopTexture = assets.getCemeteryTopTextureOrNull();
         this.graveTexture = assets.getGraveTextureOrNull();
         this.graveExploredTexture = assets.getGraveExploredTextureOrNull();
+        this.keyPickupTexture = assets.getKeyPickupTextureOrNull();
         this.backgroundRenderers = createBackgroundRenderers();
         this.obstacleColors = createObstacleColors();
     }
@@ -78,6 +80,7 @@ public final class WorldRenderer {
         shapeRenderer.end();
 
         drawGraveTextures(level, gameWorld, camera);
+        drawKeyPickupTexturesIfAvailable(level, gameWorld, camera);
 
         // Draw player above interactables
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -601,6 +604,10 @@ public final class WorldRenderer {
      * @param gameWorld current world state
      */
     private void drawKeyPickups(LevelDefinition level, GameWorld gameWorld) {
+        if (keyPickupTexture != null) {
+            return;
+        }
+
         shapeRenderer.setColor(ColorPalette.KEY_PICKUP);
         for (KeyPickup keyPickup : level.getKeyPickups()) {
             if (!gameWorld.isPickupCollected(keyPickup)) {
@@ -612,5 +619,33 @@ public final class WorldRenderer {
                 );
             }
         }
+    }
+
+    /**
+     * Draws textured key pickups above shape layers when a key texture is available.
+     *
+     * @param level current level definition
+     * @param gameWorld current world state
+     * @param camera active world camera
+     */
+    private void drawKeyPickupTexturesIfAvailable(LevelDefinition level, GameWorld gameWorld, OrthographicCamera camera) {
+        if (keyPickupTexture == null) {
+            return;
+        }
+
+        spriteBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.begin();
+        for (KeyPickup keyPickup : level.getKeyPickups()) {
+            if (!gameWorld.isPickupCollected(keyPickup)) {
+                spriteBatch.draw(
+                    keyPickupTexture,
+                    keyPickup.getArea().x,
+                    keyPickup.getArea().y,
+                    keyPickup.getArea().width,
+                    keyPickup.getArea().height
+                );
+            }
+        }
+        spriteBatch.end();
     }
 }
