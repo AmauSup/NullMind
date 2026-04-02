@@ -98,11 +98,7 @@ public final class PlayerMovementService implements MovementService {
      * @return {@code true} when blocked
      */
     private boolean isBlocked(Rectangle candidate, List<Obstacle> obstacles) {
-        for (Obstacle obstacle : obstacles) {
-            if (obstacle.getBounds().overlaps(candidate)) {
-                return true;
-            }
-        }
-        return false;
+        return obstacles.stream()
+            .anyMatch(obstacle -> obstacle.getBounds().overlaps(candidate));
     }
 }
