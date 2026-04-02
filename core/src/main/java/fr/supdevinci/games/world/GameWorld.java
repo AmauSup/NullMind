@@ -126,12 +126,10 @@ public final class GameWorld {
      * @return nearby interactable, or {@code null} if none found
      */
     private InteractableObject findNearbyInteractable(Rectangle playerBounds) {
-        for (InteractableObject interactableObject : currentLevel.getInteractableObjects()) {
-            if (isInInteractionRange(playerBounds, interactableObject.getArea())) {
-                return interactableObject;
-            }
-        }
-        return null;
+        return currentLevel.getInteractableObjects().stream()
+            .filter(interactableObject -> isInInteractionRange(playerBounds, interactableObject.getArea()))
+            .findFirst()
+            .orElse(null);
     }
 
     /**
@@ -171,9 +169,12 @@ public final class GameWorld {
             return;
         }
 
-        boolean wasActiveBefore = screamManager.isActive();
+        if (screamManager.isActive()) {
+            return;
+        }
+
         screamManager.tryActivate();
-        if (!wasActiveBefore && screamManager.isActive()) {
+        if (screamManager.isActive()) {
             levelsWithTriggeredScreamer.add(currentLevel.getId());
         }
     }
@@ -247,12 +248,10 @@ public final class GameWorld {
      * @param obstacles destination obstacle list
      */
     private void addLockedTransitionObstacles(List<Obstacle> obstacles) {
-        for (TransitionZone transitionZone : currentLevel.getTransitionZones()) {
-            if (isTransitionLocked(transitionZone)) {
-                Rectangle area = transitionZone.getArea();
-                obstacles.add(new Obstacle(area.x, area.y, area.width, area.height));
-            }
-        }
+        currentLevel.getTransitionZones().stream()
+            .filter(this::isTransitionLocked)
+            .map(TransitionZone::getArea)
+            .forEach(area -> obstacles.add(new Obstacle(area.x, area.y, area.width, area.height)));
     }
 
     /**
