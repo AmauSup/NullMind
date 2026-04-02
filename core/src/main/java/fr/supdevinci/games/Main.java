@@ -8,6 +8,8 @@ import fr.supdevinci.games.logic.PlayerMovementService;
 import fr.supdevinci.games.screen.GameScreen;
 import fr.supdevinci.games.screen.TitleScreen;
 import fr.supdevinci.games.world.LevelCatalog;
+import fr.supdevinci.games.world.screamer.DefaultScreamerManagerFactory;
+import fr.supdevinci.games.world.screamer.ScreamerManagerFactory;
 
 /**
  * Entry point shared by all platforms.
@@ -26,7 +28,14 @@ public class Main extends Game {
     public void create() {
         assets = new GameAssets();
         MovementService movementService = new PlayerMovementService();
-        context = new GameContext(this, assets, LevelCatalog.createDefault(), movementService);
+        ScreamerManagerFactory screamerManagerFactory = new DefaultScreamerManagerFactory();
+        context = new GameContext(
+            this,
+            assets,
+            LevelCatalog.createDefault(),
+            movementService,
+            screamerManagerFactory
+        );
         showTitleScreen();
     }
 

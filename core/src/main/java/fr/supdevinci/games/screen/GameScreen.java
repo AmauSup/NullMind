@@ -40,7 +40,7 @@ public final class GameScreen extends ScreenAdapter {
     private final ScreamerRenderer screamerRenderer;
     private final GameWorld gameWorld;
     private float elapsedSeconds;
-    private boolean timerStopped;
+    private GamePlayState gamePlayState;
     private String finalTimeText;
     private String victoryText;
 
@@ -57,9 +57,13 @@ public final class GameScreen extends ScreenAdapter {
         this.worldRenderer = new WorldRenderer(context.getAssets());
         this.hudRenderer = new HudRenderer(context.getAssets());
         this.screamerRenderer = new ScreamerRenderer(context.getAssets());
-        this.gameWorld = new GameWorld(context.getLevelCatalog(), context.getMovementService());
+        this.gameWorld = new GameWorld(
+            context.getLevelCatalog(),
+            context.getMovementService(),
+            context.getScreamerManagerFactory().create()
+        );
         this.elapsedSeconds = 0f;
-        this.timerStopped = false;
+        this.gamePlayState = GamePlayState.RUNNING;
         this.finalTimeText = "00:00";
         this.victoryText = "";
         this.camera.position.set(new Vector3(GameConfig.WORLD_WIDTH / 2f, GameConfig.WORLD_HEIGHT / 2f, 0f));
@@ -104,7 +108,7 @@ public final class GameScreen extends ScreenAdapter {
      * @param delta frame delta time in seconds
      */
     private void updateChronometer(float delta) {
-        if (!timerStopped) {
+        if (gamePlayState == GamePlayState.RUNNING) {
             elapsedSeconds += delta;
         }
     }
@@ -113,10 +117,10 @@ public final class GameScreen extends ScreenAdapter {
      * Stops the timer when the player reaches the cellar level and prepares victory text.
      */
     private void stopChronometerIfReachedCellar() {
-        if (timerStopped || gameWorld.getCurrentLevel().getId() != LevelId.CELLAR) {
+        if (gamePlayState != GamePlayState.RUNNING || gameWorld.getCurrentLevel().getId() != LevelId.CELLAR) {
             return;
         }
-        timerStopped = true;
+        gamePlayState = GamePlayState.VICTORY;
         finalTimeText = formatElapsedTime(elapsedSeconds);
         victoryText = GameConstants.VICTORY_MESSAGE_PREFIX + finalTimeText;
     }
@@ -127,7 +131,7 @@ public final class GameScreen extends ScreenAdapter {
      * @return formatted current or final elapsed time
      */
     private String getCurrentTimerText() {
-        return timerStopped ? finalTimeText : formatElapsedTime(elapsedSeconds);
+        return gamePlayState == GamePlayState.VICTORY ? finalTimeText : formatElapsedTime(elapsedSeconds);
     }
 
     /**

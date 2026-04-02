@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LevelCatalogTest {
@@ -42,5 +43,27 @@ class LevelCatalogTest {
             .orElseThrow();
 
         assertEquals(3, caveTransition.getRequiredKeys().size());
+    }
+
+    @Test
+    void shouldFallbackToDefaultSpawnWhenSpawnIdIsUnknown() {
+        LevelCatalog catalog = LevelCatalog.createDefault();
+
+        SpawnPoint fallback = catalog.get(LevelId.HOUSE).resolveSpawn("unknown-spawn");
+
+        assertNotNull(fallback);
+        assertEquals("start", fallback.getId());
+    }
+
+    @Test
+    void shouldHaveAtLeastOneLockedTransitionInGameFlow() {
+        LevelCatalog catalog = LevelCatalog.createDefault();
+
+        long lockedTransitions = java.util.Arrays.stream(LevelId.values())
+            .flatMap(levelId -> catalog.get(levelId).getTransitionZones().stream())
+            .filter(transition -> !transition.getRequiredKeys().isEmpty())
+            .count();
+
+        assertTrue(lockedTransitions >= 1);
     }
 }

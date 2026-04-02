@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerMovementServiceTest {
     private static final Rectangle WORLD_BOUNDS = new Rectangle(0f, 0f, 300f, 300f);
@@ -52,5 +53,31 @@ class PlayerMovementServiceTest {
 
         assertEquals(20f, result.x);
         assertEquals(20f, result.y);
+    }
+
+    @Test
+    void shouldNormalizeDiagonalMovement() {
+        Rectangle result = compute(new Rectangle(20f, 20f, 28f, 28f), new MovementIntent(1f, 1f), List.of());
+
+        float movedX = result.x - 20f;
+        float movedY = result.y - 20f;
+        assertTrue(Math.abs(movedX - movedY) < 0.001f);
+        assertTrue(movedX < SPEED);
+    }
+
+    @Test
+    void shouldNotMoveWhenDeltaIsNonPositive() {
+        Rectangle current = new Rectangle(42f, 84f, 28f, 28f);
+        Rectangle result = movementService.computeNextBounds(
+            current,
+            new MovementIntent(1f, 0f),
+            SPEED,
+            0f,
+            WORLD_BOUNDS,
+            List.of()
+        );
+
+        assertEquals(42f, result.x);
+        assertEquals(84f, result.y);
     }
 }
